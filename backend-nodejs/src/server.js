@@ -18,6 +18,9 @@ import restockRoutes from './routes/restock.js';
 import dashboardRoutes from './routes/dashboard.js';
 import supplierRoutes from './routes/suppliers.js';
 import emsRoutes from './routes/ems.js';
+import rlRoutes from './routes/rl.js';
+import aiDecisionRoutes from './routes/aiDecisions.js';
+import llmQueryRoutes from './routes/llmQuery.js';
 
 // Load environment variables
 dotenv.config();
@@ -28,46 +31,44 @@ const app = express();
 // Connect to MongoDB
 connectDatabase();
 
-// Security middleware
-app.use(helmet());
-
-// CORS configuration (must be before rate limiting and routes to handle preflight)
+// CORS configuration (MUST be before helmet and everything else to handle preflight)
 const allowedOrigins = [
   'https://ai-crm-sigma-five.vercel.app',
   'https://setu.blackholeinfiverse.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  // Also include any origins from env (if set)
   ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) || []),
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (no Origin header)
     if (!origin) return callback(null, true);
-
-    // Explicit allowlist
     if (allowedOrigins.includes(origin)) return callback(null, true);
-
-    // In development, allow any localhost/127.0.0.1 port
     const isDev = (process.env.NODE_ENV || 'development') !== 'production';
     if (isDev) {
       const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
       if (localhostPattern.test(origin)) return callback(null, true);
     }
-
     console.log('CORS blocked for origin:', origin);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control', 'Pragma', 'Expires'],
+  allowedHeaders: '*',
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Security middleware (after CORS so preflight is not blocked)
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 
 // Rate limiting (relaxed for development)
 const limiter = rateLimit({
@@ -107,6 +108,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/restock', restockRoutes);
 app.use('/api/ems', emsRoutes);
+app.use('/api/rl', rlRoutes);
+app.use('/api/ai-decisions', aiDecisionRoutes);
+app.use('/api/llm-query', llmQueryRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/suppliers', supplierRoutes);
 

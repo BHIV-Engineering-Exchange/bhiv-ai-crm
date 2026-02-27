@@ -2,30 +2,30 @@ import apiClient from './baseAPI';
 
 export const emsAPI = {
   // Email Triggers
-  sendRestockAlert: (data) => apiClient.post('/ems/restock-alert', data),
-  sendPurchaseOrder: (data) => apiClient.post('/ems/purchase-order', data),
-  sendShipmentNotification: (data) => apiClient.post('/ems/shipment-notification', data),
-  sendDeliveryDelay: (data) => apiClient.post('/ems/delivery-delay', data),
+  sendRestockAlert: (data) => apiClient.post('/api/ems/restock-alert', data),
+  sendPurchaseOrder: (data) => apiClient.post('/api/ems/purchase-order', data),
+  sendShipmentNotification: (data) => apiClient.post('/api/ems/shipment-notification', data),
+  sendDeliveryDelay: (data) => apiClient.post('/api/ems/delivery-delay', data),
   
   // Scheduled Emails
-  getScheduledEmails: () => apiClient.get('/ems/scheduled'),
-  scheduleEmail: (data) => apiClient.post('/ems/schedule', data),
-  cancelScheduledEmail: (id) => apiClient.delete(`/ems/scheduled/${id}`),
-  processScheduledEmails: () => apiClient.post('/ems/process-scheduled'),
+  getScheduledEmails: () => apiClient.get('/api/ems/scheduled'),
+  scheduleEmail: (data) => apiClient.post('/api/ems/schedule', data),
+  cancelScheduledEmail: (id) => apiClient.delete(`/api/ems/scheduled/${id}`),
+  processScheduledEmails: () => apiClient.post('/api/ems/process-scheduled'),
   
   // Email Activity
-  getEmailActivity: (params) => apiClient.get('/ems/activity', { params }),
-  getEmailStats: () => apiClient.get('/ems/stats'),
+  getEmailActivity: (params) => apiClient.get('/api/ems/activity', { params }),
+  getEmailStats: () => apiClient.get('/api/ems/stats'),
   
   // Email Templates
-  getTemplates: () => apiClient.get('/ems/templates'),
-  getTemplate: (id) => apiClient.get(`/ems/templates/${id}`),
-  createTemplate: (data) => apiClient.post('/ems/templates', data),
-  updateTemplate: (id, data) => apiClient.put(`/ems/templates/${id}`, data),
+  getTemplates: () => apiClient.get('/api/ems/templates'),
+  getTemplate: (id) => apiClient.get(`/api/ems/templates/${id}`),
+  createTemplate: (data) => apiClient.post('/api/ems/templates', data),
+  updateTemplate: (id, data) => apiClient.put(`/api/ems/templates/${id}`, data),
   
   // Settings
-  getSettings: () => apiClient.get('/ems/settings'),
-  updateSettings: (data) => apiClient.put('/ems/settings', data),
+  getSettings: () => apiClient.get('/api/ems/settings'),
+  updateSettings: (data) => apiClient.put('/api/ems/settings', data),
 };
 
 export default emsAPI;

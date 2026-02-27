@@ -12,7 +12,7 @@ import { useAuth } from '../../context/MongoAuthContext';
 const Signup = () => {
   const navigate = useNavigate();
   const { signup, loginWithOAuth } = useAuth();
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -62,7 +62,7 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -76,7 +76,7 @@ const Signup = () => {
         lastName: formData.lastName,
         companyName: formData.companyName
       });
-      
+
       setSuccess(true);
       setTimeout(() => {
         navigate('/');
