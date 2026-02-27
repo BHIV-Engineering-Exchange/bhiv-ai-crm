@@ -32,11 +32,15 @@ connectDatabase();
 app.use(helmet());
 
 // CORS configuration (must be before rate limiting and routes to handle preflight)
-const allowedOrigins = (process.env.CORS_ORIGINS?.split(',') || [
+const allowedOrigins = [
+  'https://ai-crm-sigma-five.vercel.app',
+  'https://setu.blackholeinfiverse.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-]).map((o) => o.trim()).filter(Boolean);
+  // Also include any origins from env (if set)
+  ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) || []),
+];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -53,9 +57,12 @@ const corsOptions = {
       if (localhostPattern.test(origin)) return callback(null, true);
     }
 
+    console.log('CORS blocked for origin:', origin);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 200,
 };
 
