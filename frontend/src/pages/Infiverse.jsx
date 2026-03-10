@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   UsersRound, Activity, Clock, TrendingUp, Award, 
   Calendar, CheckCircle, XCircle, AlertTriangle, RefreshCw,
-  Eye, EyeOff, Shield, BarChart3, LogIn, LogOut, Save
+  Eye, EyeOff, Shield, BarChart3, LogIn, LogOut, Save, Monitor
 } from 'lucide-react';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/common/ui/Card';
 import MetricCard from '../components/common/charts/MetricCard';
@@ -17,6 +17,7 @@ import { employeeAPI } from '../services/api/employeeAPI';
 import { userAPI } from '../services/api/userAPI';
 import { formatDate, formatRelativeTime } from '@/utils/dateUtils';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
 
 export const Infiverse = () => {
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,22 @@ export const Infiverse = () => {
   const [privacySettings, setPrivacySettings] = useState({
     facial_recognition_opt_in: false,
   });
+  const [workflowDashboard, setWorkflowDashboard] = useState(null);
+  const [workflowLoading, setWorkflowLoading] = useState(false);
+  const [workflowError, setWorkflowError] = useState(null);
+  const [workflowToken, setWorkflowToken] = useState(localStorage.getItem('WorkflowToken') || null);
+  const [workflowUser, setWorkflowUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('WorkflowUser')); } catch { return null; }
+  });
+  const [workflowLoginForm, setWorkflowLoginForm] = useState({ email: '', password: '' });
+  const [workflowLoginLoading, setWorkflowLoginLoading] = useState(false);
+  const [workflowLoginError, setWorkflowLoginError] = useState(null);
+  const [showIframe, setShowIframe] = useState(true);
+  const [showLoginPanel, setShowLoginPanel] = useState(false);
+
+  // Workflow API base URL from environment or default
+  const WORKFLOW_API_URL = import.meta.env.VITE_WORKFLOW_API_URL || 'https://blackholeworkflow.onrender.com/api';
+  const WORKFLOW_FRONTEND_URL = import.meta.env.VITE_WORKFLOW_FRONTEND_URL || 'http://localhost:5173';
 
   // Fetch current user
   const fetchCurrentUser = useCallback(async () => {
@@ -93,6 +110,74 @@ export const Infiverse = () => {
     }
   }, []);
 
+  // Fetch workflow admin dashboard data
+  const fetchWorkflowDashboard = useCallback(async () => {
+    if (!workflowToken) return;
+    try {
+      setWorkflowLoading(true);
+      setWorkflowError(null);
+      
+      const response = await axios.get(`${WORKFLOW_API_URL}/crm-integration/workflow-dashboard`, {
+        headers: {
+          'x-auth-token': workflowToken,
+          'Authorization': `Bearer ${workflowToken}`
+        }
+      });
+      
+      if (response.data.success) {
+        setWorkflowDashboard(response.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch workflow dashboard:', err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setWorkflowError('Session expired. Please login again.');
+        handleWorkflowLogout();
+      } else {
+        setWorkflowError('Failed to load workflow dashboard data');
+      }
+    } finally {
+      setWorkflowLoading(false);
+    }
+  }, [WORKFLOW_API_URL, workflowToken]);
+
+  // Login to Workflow System
+  const handleWorkflowLogin = async (e) => {
+    e.preventDefault();
+    try {
+      setWorkflowLoginLoading(true);
+      setWorkflowLoginError(null);
+
+      const response = await axios.post(`${WORKFLOW_API_URL}/auth/login`, {
+        email: workflowLoginForm.email,
+        password: workflowLoginForm.password,
+      });
+
+      const { token, user } = response.data;
+      localStorage.setItem('WorkflowToken', token);
+      localStorage.setItem('WorkflowUser', JSON.stringify(user));
+      setWorkflowToken(token);
+      setWorkflowUser(user);
+      setWorkflowLoginForm({ email: '', password: '' });
+      setSuccess('Logged into Workflow system successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Workflow login failed:', err);
+      setWorkflowLoginError(err.response?.data?.error || 'Login failed. Check your credentials.');
+    } finally {
+      setWorkflowLoginLoading(false);
+    }
+  };
+
+  // Logout from Workflow System
+  const handleWorkflowLogout = () => {
+    localStorage.removeItem('WorkflowToken');
+    localStorage.removeItem('WorkflowUser');
+    setWorkflowToken(null);
+    setWorkflowUser(null);
+    setWorkflowDashboard(null);
+    setShowIframe(false);
+  };
+
   useEffect(() => {
     fetchCurrentUser();
     
@@ -108,6 +193,13 @@ export const Infiverse = () => {
 
     return () => clearInterval(interval);
   }, [fetchCurrentUser, currentUser, fetchEmployeeData]);
+
+  // Auto-fetch workflow dashboard when token becomes available and tab is active
+  useEffect(() => {
+    if (workflowToken && activeTab === 'workflow-monitoring') {
+      fetchWorkflowDashboard();
+    }
+  }, [workflowToken, activeTab, fetchWorkflowDashboard]);
 
   const handleCheckIn = async () => {
     if (!currentUser) return;
@@ -284,6 +376,20 @@ export const Infiverse = () => {
           Performance
         </button>
         <button
+          onClick={() => {
+            setActiveTab('workflow-monitoring');
+            if (workflowToken) fetchWorkflowDashboard();
+          }}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'workflow-monitoring'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Monitor className="inline h-4 w-4 mr-1" />
+          Workflow Monitoring
+        </button>
+        <button
           onClick={() => setActiveTab('privacy')}
           className={`px-4 py-2 font-medium transition-colors ${
             activeTab === 'privacy'
@@ -429,6 +535,292 @@ export const Infiverse = () => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Workflow Monitoring Tab - Embedded Workflow Dashboard */}
+      {activeTab === 'workflow-monitoring' && (
+        <div className="space-y-4">
+          {/* Top Action Bar */}
+          <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                Workflow Admin Dashboard
+                {workflowToken && workflowUser && (
+                  <>
+                    {' — '}
+                    <strong>{workflowUser.name}</strong>
+                    <Badge variant="outline" className="ml-1">{workflowUser.role}</Badge>
+                  </>
+                )}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              {workflowToken ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => { setShowIframe(false); fetchWorkflowDashboard(); }}
+                    disabled={workflowLoading}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Native Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowIframe(true)}
+                  >
+                    <Monitor className="h-4 w-4 mr-1" />
+                    Full View
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleWorkflowLogout}>
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Disconnect
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLoginPanel(!showLoginPanel)}
+                >
+                  <LogIn className="h-4 w-4 mr-1" />
+                  {showLoginPanel ? 'Hide Login' : 'Connect for Enhanced View'}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const iframe = document.getElementById('workflow-iframe');
+                  if (iframe) iframe.src = iframe.src;
+                }}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open(WORKFLOW_FRONTEND_URL, '_blank')}
+              >
+                Open in New Tab
+              </Button>
+            </div>
+          </div>
+
+          {/* Optional API Login Panel */}
+          {showLoginPanel && !workflowToken && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <LogIn className="h-4 w-4" />
+                  Connect to Workflow API
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Login with your Workflow admin credentials to enable the enhanced native dashboard with real-time metrics.
+                </p>
+                {workflowLoginError && (
+                  <Alert variant="destructive" className="mb-3" onClose={() => setWorkflowLoginError(null)}>
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    {workflowLoginError}
+                  </Alert>
+                )}
+                <form onSubmit={handleWorkflowLogin} className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <Input
+                      type="email"
+                      placeholder="Workflow Email"
+                      value={workflowLoginForm.email}
+                      onChange={(e) => setWorkflowLoginForm({ ...workflowLoginForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      type="password"
+                      placeholder="Workflow Password"
+                      value={workflowLoginForm.password}
+                      onChange={(e) => setWorkflowLoginForm({ ...workflowLoginForm, password: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={workflowLoginLoading}>
+                    {workflowLoginLoading ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <LogIn className="h-4 w-4 mr-1" />
+                        Connect
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {workflowError && (
+            <Alert variant="destructive" onClose={() => setWorkflowError(null)}>
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              {workflowError}
+            </Alert>
+          )}
+
+          {/* Primary View: Iframe or Native Dashboard */}
+          {showIframe ? (
+            <Card>
+              <CardContent className="p-0">
+                <div className="w-full" style={{ height: 'calc(100vh - 280px)', minHeight: '600px' }}>
+                  <iframe
+                    id="workflow-iframe"
+                    src={workflowToken
+                      ? `${WORKFLOW_FRONTEND_URL}${WORKFLOW_FRONTEND_URL.includes('?') ? '&' : '?'}embeddedToken=${encodeURIComponent(workflowToken)}`
+                      : WORKFLOW_FRONTEND_URL
+                    }
+                    className="w-full h-full border-0 rounded-b-lg"
+                    title="Workflow Admin Dashboard"
+                    allow="fullscreen"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Native Dashboard (only when logged in via API) */}
+              {workflowLoading && (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner text="Loading workflow dashboard..." />
+                </div>
+              )}
+
+              {workflowDashboard && !workflowLoading && (
+                <>
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <MetricCard
+                      title="Total Employees"
+                      value={workflowDashboard.stats?.totalEmployees || 0}
+                      icon={UsersRound}
+                      variant="primary"
+                    />
+                    <MetricCard
+                      title="Present Today"
+                      value={workflowDashboard.stats?.presentToday || 0}
+                      icon={CheckCircle}
+                      variant="success"
+                    />
+                    <MetricCard
+                      title="Active Now"
+                      value={workflowDashboard.stats?.activeNow || 0}
+                      icon={Activity}
+                      variant="accent"
+                    />
+                    <MetricCard
+                      title="Avg Hours Today"
+                      value={workflowDashboard.stats?.avgHoursToday || '0.00'}
+                      icon={Clock}
+                      variant="warning"
+                    />
+                  </div>
+
+                  {/* Employee Table */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <UsersRound className="h-5 w-5" />
+                        Employee Attendance Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Department</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Start Time</TableHead>
+                            <TableHead>Hours Worked</TableHead>
+                            <TableHead>Active</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {workflowDashboard.employees?.map((emp) => (
+                            <TableRow key={emp.id}>
+                              <TableCell className="font-medium">{emp.name}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={emp.departmentColor ? `${emp.departmentColor} text-white` : ''}>
+                                  {emp.department}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{emp.role}</TableCell>
+                              <TableCell>
+                                <Badge variant={emp.attendance?.status === 'present' ? 'success' : 'secondary'}>
+                                  {emp.attendance?.status || 'absent'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {emp.attendance?.startTime
+                                  ? new Date(emp.attendance.startTime).toLocaleTimeString()
+                                  : '—'}
+                              </TableCell>
+                              <TableCell>
+                                {emp.attendance?.hoursWorked
+                                  ? `${Number(emp.attendance.hoursWorked).toFixed(2)}h`
+                                  : '—'}
+                              </TableCell>
+                              <TableCell>
+                                {emp.attendance?.isActive ? (
+                                  <span className="flex items-center gap-1 text-green-600">
+                                    <Activity className="h-3 w-3 animate-pulse" /> Online
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">Offline</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {(!workflowDashboard.employees || workflowDashboard.employees.length === 0) && (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                No employee data available
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+
+                  {/* Last Updated */}
+                  <div className="text-sm text-muted-foreground text-right">
+                    Last updated: {workflowDashboard.lastUpdated
+                      ? new Date(workflowDashboard.lastUpdated).toLocaleString()
+                      : 'N/A'}
+                  </div>
+                </>
+              )}
+
+              {!workflowDashboard && !workflowLoading && !workflowError && workflowToken && (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Click to load native dashboard data</p>
+                    <Button className="mt-4" onClick={fetchWorkflowDashboard}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Load Dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* Privacy Tab */}
