@@ -12,7 +12,7 @@ import Dashboard from './pages/Dashboard';
 import UnifiedDashboard from './pages/UnifiedDashboard';
 import Logistics from './pages/Logistics';
 import CRM from './pages/CRM';
-import Infiverse from './pages/Infiverse';
+import Infiverse from './pages/InfiverseEmbedded';
 import Inventory from './pages/Inventory';
 import Suppliers from './pages/Suppliers';
 import Products from './pages/Products';

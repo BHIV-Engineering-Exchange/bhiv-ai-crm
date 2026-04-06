@@ -201,16 +201,86 @@ const StatusItem = ({ label, status }) => {
 
 const NavItem = ({ item, isCollapsed, onClick }) => {
   const Icon = item.icon;
+  const isExternal = Boolean(item.external) || /^https?:\/\//.test(item.path);
+  const openInPopup = Boolean(item.openInPopup);
+
+  const handleItemClick = () => {
+    // Close mobile sidebar when clicking a link
+    if (window.innerWidth < 1024) {
+      onClick?.();
+    }
+  };
+
+  const handleExternalClick = (event) => {
+    handleItemClick();
+
+    if (!openInPopup) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const popupWidth = 1200;
+    const popupHeight = 760;
+    const left = Math.max(Math.floor((window.screen.width - popupWidth) / 2), 0);
+    const top = Math.max(Math.floor((window.screen.height - popupHeight) / 2), 0);
+    const popupFeatures = [
+      'popup=yes',
+      `width=${popupWidth}`,
+      `height=${popupHeight}`,
+      `left=${left}`,
+      `top=${top}`,
+      'resizable=yes',
+      'scrollbars=yes',
+    ].join(',');
+
+    const popup = window.open(item.path, 'infiverseDashboardWindow', popupFeatures);
+
+    if (popup) {
+      popup.focus();
+      return;
+    }
+
+    // Fallback when popups are blocked by browser settings.
+    window.open(item.path, '_blank', 'noopener,noreferrer');
+  };
+
+  if (isExternal) {
+    return (
+      <a
+        href={item.path}
+        onClick={handleExternalClick}
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group relative',
+          'text-muted-foreground hover:bg-muted hover:text-foreground hover:scale-105',
+          isCollapsed && 'justify-center'
+        )}
+        title={isCollapsed ? item.name : undefined}
+      >
+        <Icon className={cn(
+          'h-5 w-5 flex-shrink-0 transition-transform duration-200',
+          !isCollapsed && 'group-hover:scale-110'
+        )} />
+        {!isCollapsed && (
+          <span className="font-medium text-sm whitespace-nowrap overflow-hidden text-ellipsis">
+            {item.name}
+          </span>
+        )}
+
+        {/* Tooltip for collapsed state */}
+        {isCollapsed && (
+          <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+            {item.name}
+          </div>
+        )}
+      </a>
+    );
+  }
   
   return (
     <NavLink
       to={item.path}
-      onClick={() => {
-        // Close mobile sidebar when clicking a link
-        if (window.innerWidth < 1024) {
-          onClick?.();
-        }
-      }}
+      onClick={handleItemClick}
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group relative',
