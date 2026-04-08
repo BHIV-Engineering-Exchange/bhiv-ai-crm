@@ -13,6 +13,7 @@ import UnifiedDashboard from './pages/UnifiedDashboard';
 import Logistics from './pages/Logistics';
 import CRM from './pages/CRM';
 import Infiverse from './pages/InfiverseEmbedded';
+import Sampada from './pages/SampadaEmbedded';
 import Inventory from './pages/Inventory';
 import Suppliers from './pages/Suppliers';
 import Products from './pages/Products';
@@ -65,6 +66,7 @@ function App() {
             <Route path={ROUTES.LOGISTICS} element={<Logistics />} />
             <Route path={ROUTES.CRM} element={<CRM />} />
             <Route path={ROUTES.INFIVERSE} element={<Infiverse />} />
+            <Route path={ROUTES.SAMPADA} element={<Sampada />} />
             <Route path={ROUTES.INVENTORY} element={<Inventory />} />
             <Route path={ROUTES.SUPPLIERS} element={<Suppliers />} />
             <Route path={ROUTES.PRODUCTS} element={<Products />} />

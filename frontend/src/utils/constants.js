@@ -7,6 +7,7 @@ export const ROUTES = {
   LOGISTICS: '/logistics',
   CRM: '/crm',
   INFIVERSE: '/infiverse',
+  SAMPADA: '/sampada',
   INVENTORY: '/inventory',
   SUPPLIERS: '/suppliers',
   PRODUCTS: '/products',
