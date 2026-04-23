@@ -29,6 +29,7 @@ export const Sidebar = ({ isOpen, onToggle, isCollapsed, onCollapseToggle }) => 
             { name: 'Logistics & Inventory', icon: Package, path: ROUTES.LOGISTICS },
             { name: 'Infiverse Monitoring', icon: UsersRound, path: ROUTES.INFIVERSE },
             { name: 'Sampada Dashboard', icon: Activity, path: ROUTES.SAMPADA },
+            { name: 'AI Artha', icon: Sparkles, path: 'https://ai-artha.vercel.app/', external: true },
             { name: 'Supplier Management', icon: Building2, path: ROUTES.SUPPLIERS },
             { name: 'Product Catalog', icon: ShoppingCart, path: ROUTES.PRODUCTS },
             { name: 'Supplier Showcase', icon: Store, path: '/showcase' },
