@@ -14,6 +14,7 @@ import Logistics from './pages/Logistics';
 import CRM from './pages/CRM';
 import Infiverse from './pages/InfiverseEmbedded';
 import Sampada from './pages/SampadaEmbedded';
+import AIArtha from './pages/AIArthaEmbedded';
 import Inventory from './pages/Inventory';
 import Suppliers from './pages/Suppliers';
 import Products from './pages/Products';
@@ -67,6 +68,7 @@ function App() {
             <Route path={ROUTES.CRM} element={<CRM />} />
             <Route path={ROUTES.INFIVERSE} element={<Infiverse />} />
             <Route path={ROUTES.SAMPADA} element={<Sampada />} />
+            <Route path={ROUTES.AI_ARTHA} element={<AIArtha />} />
             <Route path={ROUTES.INVENTORY} element={<Inventory />} />
             <Route path={ROUTES.SUPPLIERS} element={<Suppliers />} />
             <Route path={ROUTES.PRODUCTS} element={<Products />} />

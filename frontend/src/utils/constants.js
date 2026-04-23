@@ -8,6 +8,7 @@ export const ROUTES = {
   CRM: '/crm',
   INFIVERSE: '/infiverse',
   SAMPADA: '/sampada',
+  AI_ARTHA: '/ai-artha',
   INVENTORY: '/inventory',
   SUPPLIERS: '/suppliers',
   PRODUCTS: '/products',
