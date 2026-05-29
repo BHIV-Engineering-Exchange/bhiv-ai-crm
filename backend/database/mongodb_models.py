@@ -588,5 +588,19 @@ def create_indexes(db):
     
     db.agent_logs.create_index([("timestamp", -1)])
     db.human_reviews.create_index("review_id", unique=True)
+
+    # SETU indexes
+    db.setu_trace_lineage.create_index("execution_id", unique=True)
+    db.setu_trace_lineage.create_index([("trace_id", 1), ("tenant_id", 1)])
+    db.setu_trace_lineage.create_index("tenant_id")
+
+    db.setu_trace_logs.create_index([("trace_id", 1), ("timestamp", -1)])
+    db.setu_trace_logs.create_index("event")
+
+    db.setu_lineage_events.create_index("lineage_event_id", unique=True)
+    db.setu_lineage_events.create_index([("trace_id", 1), ("sequence", 1)])
+
+    db.setu_telemetry_events.create_index([("trace_id", 1), ("timestamp", 1)])
+    db.setu_telemetry_events.create_index("event_type")
     
     print("[OK] MongoDB indexes created successfully")

@@ -147,4 +147,10 @@ COLLECTIONS = {
     
     # Auth collections
     'users': 'users',
+
+    # SETU collections
+    'setu_trace_lineage': 'setu_trace_lineage',
+    'setu_trace_logs': 'setu_trace_logs',
+    'setu_lineage_events': 'setu_lineage_events',
+    'setu_telemetry_events': 'setu_telemetry_events',
 }
