@@ -38,3 +38,78 @@ class BucketLineageAdapter:
 
     async def list_events(self, trace_id: str, limit: int = 200):
         return await self.store.list_lineage_events(trace_id, limit)
+
+    async def verify_execution_history(self, execution_id: str, trace_id: str) -> Dict[str, Any]:
+        """Verify execution event, signal, and history exist in Bucket"""
+        
+        verification_result = {
+            "execution_id": execution_id,
+            "trace_id": trace_id,
+            "verified": True,
+            "verification_details": {}
+        }
+        
+        # Check execution event exists
+        execution_events = await self.store.list_lineage_events(trace_id, limit=1000)
+        execution_event_found = any(
+            event.get("execution_id") == execution_id 
+            for event in execution_events
+        )
+        
+        verification_result["verification_details"]["execution_event_exists"] = execution_event_found
+        
+        # Check signal exists
+        signal_records = await self.store.list_signal_ingestion(trace_id, limit=1000)
+        signal_found = any(
+            record.get("entity_id") == execution_id or record.get("trace_id") == trace_id
+            for record in signal_records
+        )
+        
+        verification_result["verification_details"]["signal_exists"] = signal_found
+        
+        # Check history exists (trace logs)
+        history_logs = await self.store.list_trace_logs(trace_id, limit=1000)
+        history_found = len(history_logs) > 0
+        
+        verification_result["verification_details"]["history_exists"] = history_found
+        
+        # Overall verification
+        verification_result["verified"] = (
+            execution_event_found and 
+            signal_found and 
+            history_found
+        )
+        
+        # Log verification result
+        await self.store.append_trace_log({
+            "event": "BUCKET_HISTORY_VERIFICATION",
+            "execution_id": execution_id,
+            "trace_id": trace_id,
+            "verified": verification_result["verified"],
+            "verification_details": verification_result["verification_details"],
+            "timestamp": datetime.utcnow().isoformat()
+        })
+        
+        return verification_result
+
+    async def retrieve_lineage_verification(self, trace_id: str) -> Dict[str, Any]:
+        """Retrieve lineage verification without duplication of local truth"""
+        
+        # Get existing lineage events from Bucket
+        lineage_events = await self.list_events(trace_id)
+        
+        # Get trace logs from Bucket  
+        trace_logs = await self.store.list_trace_logs(trace_id)
+        
+        # Get signal records from Bucket
+        signal_records = await self.store.list_signal_ingestion(trace_id)
+        
+        return {
+            "trace_id": trace_id,
+            "lineage_events": lineage_events,
+            "trace_logs": trace_logs, 
+            "signal_records": signal_records,
+            "verification_status": "retrieved_from_bucket",
+            "local_duplication": False,
+            "retrieved_at": datetime.utcnow().isoformat()
+        }

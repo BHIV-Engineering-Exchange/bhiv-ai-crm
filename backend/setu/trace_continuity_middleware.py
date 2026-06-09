@@ -42,25 +42,41 @@ class TraceContinuityMiddleware(BaseHTTPMiddleware):
             return JSONResponse(status_code=400, content=payload)
 
         execution = extract_execution(payload)
+        # Log trace received
+        await self.validator.store.append_trace_log({
+            "event": "TRACE_RECEIVED",
+            "execution_id": execution.get("execution_id") if isinstance(execution, dict) else None,
+            "trace_id": execution.get("trace_id") if isinstance(execution, dict) else None,
+            "tenant_id": execution.get("tenant_id") if isinstance(execution, dict) else None,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+
         try:
             record = await self.validator.validate(execution)
         except TraceContinuityError as error:
-            try:
-                await self.validator.store.append_trace_log({
-                    "event": "trace_continuity_reject",
-                    "execution_id": execution.get("execution_id") if isinstance(execution, dict) else None,
-                    "trace_id": execution.get("trace_id") if isinstance(execution, dict) else None,
-                    "tenant_id": execution.get("tenant_id") if isinstance(execution, dict) else None,
-                    "reason": error.code,
-                    "details": error.details,
-                    "timestamp": datetime.utcnow().isoformat()
-                })
-            except Exception:
-                pass
+            # Log trace mismatch rejection
+            await self.validator.store.append_trace_log({
+                "event": "TRACE_MISMATCH_REJECTED",
+                "execution_id": execution.get("execution_id") if isinstance(execution, dict) else None,
+                "trace_id": execution.get("trace_id") if isinstance(execution, dict) else None,
+                "tenant_id": execution.get("tenant_id") if isinstance(execution, dict) else None,
+                "reason": error.code,
+                "details": error.details,
+                "timestamp": datetime.utcnow().isoformat()
+            })
             return JSONResponse(status_code=error.status_code, content=error.payload())
 
         request.state.setu_execution = execution
         request.state.setu_trace = record
+
+        # Log trace forwarded
+        await self.validator.store.append_trace_log({
+            "event": "TRACE_FORWARDED",
+            "execution_id": record["execution_id"],
+            "trace_id": record["trace_id"],
+            "tenant_id": record["tenant_id"],
+            "timestamp": datetime.utcnow().isoformat()
+        })
 
         async def receive():
             return {"type": "http.request", "body": body_bytes, "more_body": False}

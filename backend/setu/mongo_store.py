@@ -6,6 +6,8 @@ TRACE_LINEAGE_COLLECTION = COLLECTIONS.get("setu_trace_lineage", "setu_trace_lin
 TRACE_LOG_COLLECTION = COLLECTIONS.get("setu_trace_logs", "setu_trace_logs")
 TELEMETRY_COLLECTION = COLLECTIONS.get("setu_telemetry_events", "setu_telemetry_events")
 LINEAGE_COLLECTION = COLLECTIONS.get("setu_lineage_events", "setu_lineage_events")
+SIGNAL_INGESTION_COLLECTION = COLLECTIONS.get("setu_signal_ingestion", "setu_signal_ingestion")
+VISIBILITY_COLLECTION = COLLECTIONS.get("setu_visibility_records", "setu_visibility_records")
 
 
 class MongoSetuStore:
@@ -63,4 +65,26 @@ class MongoSetuStore:
 
     async def list_trace_logs(self, trace_id: str, limit: int = 200) -> List[Dict[str, Any]]:
         cursor = self._collection(TRACE_LOG_COLLECTION).find({"trace_id": trace_id}).sort("timestamp", 1).limit(limit)
+        return [self._serialize(doc) async for doc in cursor]
+
+    async def append_signal_ingestion(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+        await self._collection(SIGNAL_INGESTION_COLLECTION).insert_one(signal)
+        return signal
+
+    async def list_signal_ingestion(self, trace_id: str, limit: int = 200) -> List[Dict[str, Any]]:
+        cursor = self._collection(SIGNAL_INGESTION_COLLECTION).find({"trace_id": trace_id}).sort("ingested_at", 1).limit(limit)
+        return [self._serialize(doc) async for doc in cursor]
+
+    async def append_visibility_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        await self._collection(VISIBILITY_COLLECTION).insert_one(record)
+        return record
+
+    async def list_visibility_records(self, trace_id: str, record_type: Optional[str] = None, filters: Optional[Dict[str, Any]] = None, limit: int = 200) -> List[Dict[str, Any]]:
+        query = {"trace_id": trace_id}
+        if record_type:
+            query["record_type"] = record_type
+        if filters:
+            query.update(filters)
+            
+        cursor = self._collection(VISIBILITY_COLLECTION).find(query).sort("consumed_at", 1).limit(limit)
         return [self._serialize(doc) async for doc in cursor]

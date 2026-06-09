@@ -232,6 +232,58 @@ google_maps = GoogleMapsIntegration()
 visit_tracker = VisitTracker(google_maps)
 office365 = Office365Integration()
 
+# Initialize SETU integrations
+try:
+    from setu.mongo_store import MongoSetuStore
+    from setu.trace_continuity import TraceContinuityValidator
+    from setu.trace_continuity_middleware import TraceContinuityMiddleware
+    from setu.sovereign_routing_adapter import SovereignRoutingAdapter
+    from setu.bucket_lineage_adapter import BucketLineageAdapter
+    from setu.telemetry_layer import TelemetryLayer
+    from setu.signal_ingestion import SignalIngestionModule
+    from setu.niyantran_integration_adapter import NiyantranIntegrationAdapter
+    from setu.contract_validation import ContractValidator
+    from setu.failure_handler import FailureHandler
+    from setu.ui_visibility_service import SetuUIVisibilityService
+    from setu.routes import create_setu_router
+    
+    # Initialize SETU components
+    setu_store = MongoSetuStore()
+    trace_validator = TraceContinuityValidator(setu_store)
+    routing_adapter = SovereignRoutingAdapter(setu_store)
+    lineage_adapter = BucketLineageAdapter(setu_store)
+    telemetry_layer = TelemetryLayer(setu_store)
+    signal_ingestion = SignalIngestionModule(setu_store, telemetry_layer)
+    niyantran_adapter = NiyantranIntegrationAdapter(setu_store)
+    contract_validator = ContractValidator()
+    failure_handler = FailureHandler(setu_store)
+    ui_visibility = SetuUIVisibilityService(setu_store, niyantran_adapter)
+    
+    # Create SETU router
+    setu_router = create_setu_router(
+        trace_validator,
+        routing_adapter,
+        lineage_adapter,
+        telemetry_layer,
+        signal_ingestion,
+        niyantran_adapter,
+        contract_validator,
+        failure_handler,
+        ui_visibility
+    )
+    
+    # Add SETU middleware
+    app.add_middleware(
+        TraceContinuityMiddleware,
+        validator=trace_validator,
+        path_prefix="/setu"
+    )
+    
+    setu_integration_ready = True
+except Exception as e:
+    print(f"[WARNING] SETU integration failed to initialize: {e}")
+    setu_integration_ready = False
+
 # Initialize database on startup
 @app.on_event("startup")
 async def startup_event():
@@ -242,6 +294,13 @@ async def startup_event():
     print("LLM Query System ready")
     print("Google Maps integration ready")
     print("Office 365 integration ready")
+    
+    # Include SETU router if initialization succeeded
+    if setu_integration_ready:
+        app.include_router(setu_router)
+        print("[OK] SETU integration ready - signal ingestion, trace continuity, Niyantran visibility")
+    else:
+        print("[WARNING] SETU integration not available")
 
 @app.get("/")
 def read_root():
