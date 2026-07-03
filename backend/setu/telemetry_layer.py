@@ -27,7 +27,14 @@ class TelemetryLayer:
             raise ValueError("Telemetry missing required fields: " + ", ".join(missing))
         if event.get("event_type") not in TELEMETRY_TYPES:
             raise ValueError("Unsupported telemetry type: " + str(event.get("event_type")))
-        return await self.store.append_telemetry(event)
+        stored = await self.store.append_telemetry(event)
+        try:
+            from .sampada_dispatcher import dispatch_to_sampada
+            subsystem = (event.get("details") or {}).get("subsystem")
+            await dispatch_to_sampada(stored, subsystem=subsystem)
+        except Exception:
+            pass  # additive side-effect; never block CRM telemetry
+        return stored
 
     def _build_event(self, event_type: str, execution: Dict[str, Any], details: Dict[str, Any],
                      overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
