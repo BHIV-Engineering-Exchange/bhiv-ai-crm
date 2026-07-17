@@ -10,14 +10,35 @@ from .trace_continuity import TraceContinuityError, extract_execution
 
 
 class TraceContinuityMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, validator, path_prefix: str = "/setu", methods: Optional[Iterable[str]] = None):
+    """Validate execution contracts only on configured paths (default: POST /setu/route)."""
+
+    def __init__(
+        self,
+        app,
+        validator,
+        path_prefix: str = "/setu",
+        methods: Optional[Iterable[str]] = None,
+        execution_paths: Optional[Iterable[str]] = None,
+    ):
         super().__init__(app)
         self.validator = validator
         self.path_prefix = path_prefix
         self.methods = {method.upper() for method in (methods or ["POST", "PUT", "PATCH"])}
+        prefix = path_prefix.rstrip("/")
+        default_execution_path = f"{prefix}/route"
+        self.execution_paths = {
+            path.rstrip("/") for path in (execution_paths or [default_execution_path])
+        }
+
+    def _requires_execution_contract(self, request: Request) -> bool:
+        if not request.url.path.startswith(self.path_prefix):
+            return False
+        if request.method.upper() not in self.methods:
+            return False
+        return request.url.path.rstrip("/") in self.execution_paths
 
     async def dispatch(self, request: Request, call_next):
-        if not request.url.path.startswith(self.path_prefix) or request.method.upper() not in self.methods:
+        if not self._requires_execution_contract(request):
             return await call_next(request)
 
         body_bytes = await request.body()

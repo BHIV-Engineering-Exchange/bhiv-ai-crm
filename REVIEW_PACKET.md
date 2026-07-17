@@ -14,8 +14,9 @@ This packet is the index for reviewing SETU. It was rewritten after the Phase II
 | Priority | Document | Purpose |
 |---|---|---|
 | 1 | `ai-crm/SETU Ownership Transition__ Phase II (Post-Handover Audit)/README.md` | Audit bundle index |
-| 2 | `ai-crm/SETU Ownership Transition__ Phase II (Post-Handover Audit)/SETU_GAP_REGISTER.md` | 22 prioritized gaps (6 Critical) |
-| 3 | `ai-crm/SETU Ownership Transition__ Phase II (Post-Handover Audit)/SETU_OWNER_ACCEPTANCE_REPORT.md` | Conditions + 30-day plan |
+| 2 | `ai-crm/SETU_E2E_VALIDATION.md` | **E2E runtime validation reference + test workflows** |
+| 3 | `ai-crm/SETU Ownership Transition__ Phase II (Post-Handover Audit)/SETU_GAP_REGISTER.md` | 22 prioritized gaps (6 Critical) |
+| 4 | `ai-crm/SETU Ownership Transition__ Phase II (Post-Handover Audit)/SETU_OWNER_ACCEPTANCE_REPORT.md` | Conditions + 30-day plan |
 
 ---
 

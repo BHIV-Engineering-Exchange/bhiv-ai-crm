@@ -250,7 +250,7 @@ try:
     # Initialize SETU components
     setu_store = MongoSetuStore()
     trace_validator = TraceContinuityValidator(setu_store)
-    routing_adapter = SovereignRoutingAdapter(setu_store)
+    routing_adapter = SovereignRoutingAdapter()
     lineage_adapter = BucketLineageAdapter(setu_store)
     telemetry_layer = TelemetryLayer(setu_store)
     signal_ingestion = SignalIngestionModule(setu_store, telemetry_layer)

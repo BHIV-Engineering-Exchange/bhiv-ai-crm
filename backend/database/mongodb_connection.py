@@ -153,4 +153,6 @@ COLLECTIONS = {
     'setu_trace_logs': 'setu_trace_logs',
     'setu_lineage_events': 'setu_lineage_events',
     'setu_telemetry_events': 'setu_telemetry_events',
+    'setu_signal_ingestion': 'setu_signal_ingestion',
+    'setu_visibility_records': 'setu_visibility_records',
 }
