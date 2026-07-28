@@ -90,8 +90,6 @@ orderSchema.pre('validate', function(next) {
 // Index for efficient queries
 orderSchema.index({ customerId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
-orderSchema.index({ orderNumber: 1 });
-
 const Order = mongoose.model('Order', orderSchema);
 
 export default Order;
