@@ -15,6 +15,6 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: SETU_MITRA_API_KEY
-        generateValue: true
+        sync: false
       - key: CORS_ORIGINS
         value: https://mitra-live-runtime-sprint.vercel.app
