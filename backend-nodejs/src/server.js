@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDatabase from './config/database.js';
 import errorHandler from './middleware/errorHandler.js';
 import { protect } from './middleware/auth.js';
@@ -21,6 +22,7 @@ import emsRoutes from './routes/ems.js';
 import rlRoutes from './routes/rl.js';
 import aiDecisionRoutes from './routes/aiDecisions.js';
 import llmQueryRoutes from './routes/llmQuery.js';
+import mitraRoutes from './routes/mitra.js';
 
 // Load environment variables
 dotenv.config();
@@ -93,10 +95,18 @@ if (process.env.NODE_ENV === 'development') {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is healthy',
-    timestamp: new Date().toISOString()
+  const mongoReady = mongoose.connection.readyState === 1;
+  res.status(mongoReady ? 200 : 503).json({
+    success: mongoReady,
+    status: mongoReady ? 'healthy' : 'unhealthy',
+    message: mongoReady ? 'Server is healthy' : 'MongoDB is not ready',
+    timestamp: new Date().toISOString(),
+    dependencies: {
+      mongodb: mongoReady ? 'connected' : 'disconnected',
+    },
+    integrations: {
+      mitra: process.env.SETU_MITRA_API_KEY ? 'configured' : 'not_configured',
+    },
   });
 });
 
@@ -111,6 +121,7 @@ app.use('/api/ems', emsRoutes);
 app.use('/api/rl', rlRoutes);
 app.use('/api/ai-decisions', aiDecisionRoutes);
 app.use('/api/llm-query', llmQueryRoutes);
+app.use('/api/mitra', mitraRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/suppliers', supplierRoutes);
 

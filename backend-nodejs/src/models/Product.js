@@ -68,7 +68,6 @@ const productSchema = new mongoose.Schema({
 });
 
 // Index for efficient queries
-productSchema.index({ sku: 1 });
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ stockQuantity: 1, minThreshold: 1 });
 
