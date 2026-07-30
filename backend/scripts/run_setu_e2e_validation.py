@@ -69,6 +69,23 @@ def start_mock_gateway(host: str = "127.0.0.1", port: int = 8001) -> HTTPServer:
     return server
 
 
+def detect_backend_type(base_url: str) -> str:
+    """Return python_setu, nodejs_crm, or unknown based on root payload."""
+    try:
+        response = httpx.get(f"{base_url.rstrip('/')}/", timeout=30.0)
+        response.raise_for_status()
+        payload = response.json()
+    except Exception:
+        return "unknown"
+
+    message = str(payload.get("message", ""))
+    if "AI Agent Logistics + CRM + Infiverse API" in message:
+        return "python_setu"
+    if payload.get("success") and "AI CRM Logistics API" in message:
+        return "nodejs_crm"
+    return "unknown"
+
+
 def login(base_url: str, username: str, password: str) -> str:
     response = httpx.post(
         f"{base_url}/auth/login",
@@ -202,6 +219,18 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"[OK] Mock Sampada gateway listening on http://127.0.0.1:{args.gateway_port}")
 
     try:
+        backend_type = detect_backend_type(args.base_url)
+        print(f"[INFO] Backend type at {args.base_url}: {backend_type}")
+        if backend_type == "nodejs_crm":
+            print(
+                "[FAIL] This URL is the Node.js CRM API (backend-nodejs). "
+                "SETU lives on the Python FastAPI backend (backend/api_app.py). "
+                "Deploy Python with: uvicorn api_app:app --host 0.0.0.0 --port $PORT"
+            )
+            return 1
+        if backend_type != "python_setu":
+            print("[WARN] Could not confirm Python SETU backend from root response; continuing anyway.")
+
         token = login(args.base_url, args.username, args.password)
         headers = {"Authorization": f"Bearer {token}"}
         client = httpx.Client(base_url=args.base_url, headers=headers, timeout=30.0)

@@ -303,3 +303,21 @@ EOF
 | F5 / GAP-003 | Middleware scoped to `POST /setu/route` only |
 | F2 / GAP-004 | `pymongo` + `motor` added to `requirements.txt` |
 | F9 / GAP-009 | `SAMPADA_SETU_*` + `MONGODB_URL` documented in `.env.example` |
+
+---
+
+## 11. Live deployment test (2026-07-17)
+
+| URL | Role | SETU |
+|---|---|---|
+| `https://ai-crm-4nje.onrender.com` | Node.js CRM API — configured in Vercel frontend bundle | **No** — `/setu/*` and `/auth/login` return 404 |
+| `https://setu.blackholeinfiverse.com` | SETU frontend (Vercel) | UI only |
+| Python SETU API | Not yet deployed to production | Required for E2E |
+
+**Live test result:** Health OK on Render, but SETU E2E **blocked** — live host runs `backend-nodejs`, not Python `api_app.py`.
+
+Deploy Python on Render with start command `uvicorn api_app:app --host 0.0.0.0 --port $PORT`, then re-run:
+
+```bash
+python scripts/run_setu_e2e_validation.py --base-url https://<your-python-api-host>
+```
