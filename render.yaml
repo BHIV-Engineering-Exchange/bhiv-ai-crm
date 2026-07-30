@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: pratham-setu-ai-crm
+    runtime: node
+    plan: free
+    rootDir: backend-nodejs
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SETU_MITRA_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://mitra-live-runtime-sprint.vercel.app
