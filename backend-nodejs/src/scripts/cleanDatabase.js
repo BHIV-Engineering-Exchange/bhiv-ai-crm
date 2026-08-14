@@ -7,7 +7,8 @@ const cleanDatabase = async () => {
   try {
     console.log('🧹 Starting database cleanup...');
 
-    await mongoose.connect(process.env.MONGODB_URL);
+    const mongoUri = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/ai_crm_logistics';
+    await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB');
 
     const db = mongoose.connection.db;

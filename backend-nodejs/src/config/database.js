@@ -10,7 +10,8 @@ const connectDatabase = async () => {
       socketTimeoutMS: 45000,
     };
 
-    await mongoose.connect(process.env.MONGODB_URL, options);
+    const mongoUri = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/ai_crm_logistics';
+    await mongoose.connect(mongoUri, options);
     
     console.log('✅ MongoDB Connected Successfully');
     console.log(`📊 Database: ${mongoose.connection.name}`);

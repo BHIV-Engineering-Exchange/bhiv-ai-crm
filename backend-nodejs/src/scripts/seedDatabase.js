@@ -11,7 +11,8 @@ const seedDatabase = async () => {
     console.log('🌱 Starting database seed...');
 
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URL);
+    const mongoUri = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/ai_crm_logistics';
+    await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB');
 
     // Clear existing data (optional - comment out if you want to keep existing data)
