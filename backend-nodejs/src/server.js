@@ -23,6 +23,7 @@ import rlRoutes from './routes/rl.js';
 import aiDecisionRoutes from './routes/aiDecisions.js';
 import llmQueryRoutes from './routes/llmQuery.js';
 import mitraRoutes from './routes/mitra.js';
+import setuRoutes from './routes/setu.js';
 
 // Load environment variables
 dotenv.config();
@@ -122,6 +123,8 @@ app.use('/api/rl', rlRoutes);
 app.use('/api/ai-decisions', aiDecisionRoutes);
 app.use('/api/llm-query', llmQueryRoutes);
 app.use('/api/mitra', mitraRoutes);
+app.use('/setu', setuRoutes);
+app.use('/api/setu', setuRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/suppliers', supplierRoutes);
 
