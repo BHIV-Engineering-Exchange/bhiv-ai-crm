@@ -2,7 +2,7 @@ import React from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import Button from '../components/common/ui/Button';
 
-const INFIVERSE_DASHBOARD_URL = 'https://blackhole-workflow.vercel.app/userdashboard';
+const INFIVERSE_DASHBOARD_URL = 'https://niyantran.blackholeinfiverse.com';
 
 export const InfiverseEmbedded = () => {
   const handleOpenInNewTab = () => {

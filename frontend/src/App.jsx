@@ -69,7 +69,6 @@ function App() {
             <Route path={ROUTES.INFIVERSE} element={<Infiverse />} />
             <Route path={ROUTES.SAMPADA} element={<Sampada />} />
             <Route path={ROUTES.AI_ARTHA} element={<AIArtha />} />
-            <Route path={ROUTES.INVENTORY} element={<Inventory />} />
             <Route path={ROUTES.SUPPLIERS} element={<Suppliers />} />
             <Route path={ROUTES.PRODUCTS} element={<Products />} />
             <Route path={ROUTES.AGENTS} element={<Agents />} />

@@ -2,7 +2,7 @@ import React from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import Button from '../components/common/ui/Button';
 
-const AI_ARTHA_DASHBOARD_URL = 'https://ai-artha.vercel.app/';
+const AI_ARTHA_DASHBOARD_URL = 'https://artha.blackholeinfiverse.com/';
 
 export const AIArthaEmbedded = () => {
   const handleOpenInNewTab = () => {
