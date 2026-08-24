@@ -24,6 +24,8 @@ import aiDecisionRoutes from './routes/aiDecisions.js';
 import llmQueryRoutes from './routes/llmQuery.js';
 import mitraRoutes from './routes/mitra.js';
 import setuRoutes from './routes/setu.js';
+import deliveryRoutes from './routes/delivery.js';
+import agentRoutes from './routes/agents.js';
 
 // Load environment variables
 dotenv.config();
@@ -127,6 +129,9 @@ app.use('/setu', setuRoutes);
 app.use('/api/setu', setuRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/delivery', deliveryRoutes);
+app.use('/returns', deliveryRoutes);
+app.use('/', agentRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

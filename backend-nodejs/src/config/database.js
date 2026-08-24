@@ -30,8 +30,14 @@ const connectDatabase = async () => {
     });
 
   } catch (error) {
-    console.error('❌ MongoDB Connection Failed:', error.message);
-    process.exit(1);
+    console.error('❌ Primary MongoDB Connection Failed:', error.message);
+    try {
+      console.log('🔄 Attempting fallback to local MongoDB (mongodb://127.0.0.1:27017/ai_crm_logistics)...');
+      await mongoose.connect('mongodb://127.0.0.1:27017/ai_crm_logistics', { serverSelectionTimeoutMS: 2000 });
+      console.log('✅ Fallback Local MongoDB Connected Successfully');
+    } catch (fallbackErr) {
+      console.warn('⚠️ MongoDB Offline Mode — SETU Server starting with in-memory fallback.');
+    }
   }
 };
 

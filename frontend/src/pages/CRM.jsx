@@ -719,10 +719,10 @@ export const CRM = () => {
     const renderQueryResult = () => {
       if (!aiQueryResult) return null;
 
-      const result = aiQueryResult.result || {};
-      const naturalResponse = aiQueryResult.natural_response || '';
-      const queryType = result.query_type || 'unknown';
-      const data = result.data || [];
+      const payload = aiQueryResult.data || aiQueryResult.result || aiQueryResult;
+      const naturalResponse = aiQueryResult.natural_response || aiQueryResult.answer || payload.answer || payload.natural_response || payload.message || (typeof payload === 'string' ? payload : '');
+      const queryType = payload.query_type || payload.type || aiQueryResult.type || 'AI Reasoning Query';
+      const data = payload.data || (Array.isArray(payload) ? payload : null);
 
       return (
         <div className="space-y-4">
