@@ -5,6 +5,34 @@ import Card from '../components/common/ui/Card';
 import { productAPI } from '../services/api/productAPI';
 import { orderAPI } from '../services/api/orderAPI';
 
+const DEFAULT_PRODUCT_IMAGES = {
+  coffee: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&auto=format&fit=crop&q=80',
+  tea: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&auto=format&fit=crop&q=80',
+  sugar: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&auto=format&fit=crop&q=80',
+  groceries: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&auto=format&fit=crop&q=80',
+  tools: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=400&auto=format&fit=crop&q=80',
+  electrical: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=400&auto=format&fit=crop&q=80',
+  default: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&auto=format&fit=crop&q=80'
+};
+
+const getProductImage = (p) => {
+  const img = p?.image || p?.image_url || p?.imageUrl || p?.primary_image_url;
+  if (img && !img.includes('placeholder') && !img.includes('via.')) {
+    return img;
+  }
+  const name = String(p?.name || '').toLowerCase();
+  const category = String(p?.category || '').toLowerCase();
+
+  if (name.includes('coffee') || category.includes('coffee')) return DEFAULT_PRODUCT_IMAGES.coffee;
+  if (name.includes('tea') || category.includes('tea')) return DEFAULT_PRODUCT_IMAGES.tea;
+  if (name.includes('sugar') || category.includes('sugar')) return DEFAULT_PRODUCT_IMAGES.sugar;
+  if (name.includes('tool') || category.includes('tool') || category.includes('hardware')) return DEFAULT_PRODUCT_IMAGES.tools;
+  if (name.includes('electr') || category.includes('electr')) return DEFAULT_PRODUCT_IMAGES.electrical;
+  if (name.includes('groc') || category.includes('groc')) return DEFAULT_PRODUCT_IMAGES.groceries;
+
+  return DEFAULT_PRODUCT_IMAGES.default;
+};
+
 const CustomerDashboard = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
@@ -27,7 +55,7 @@ const CustomerDashboard = () => {
       category: p.category || '',
       price: Number(p.sellingPrice || p.price || 0),
       stock: Number(p.stockQuantity || p.stock || 0),
-      image_url: p.image_url || p.imageUrl || '/api/placeholder/400/300',
+      image_url: getProductImage(p),
     };
   };
 
@@ -139,7 +167,7 @@ const CustomerDashboard = () => {
       }
     } catch (error) {
       console.error('Error placing order:', error);
-      alert('Failed to place order. Please try again.');
+      alert(error.response?.data?.message || 'Failed to place order. Please try again.');
     }
   };
 
@@ -246,12 +274,15 @@ const CustomerDashboard = () => {
                       src={product.image_url}
                       alt={product.name}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = DEFAULT_PRODUCT_IMAGES.default;
+                      }}
                     />
                   </div>
                   <div className="p-6 flex-1">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-semibold text-lg">{product.name}</h3>
-                      <span className="text-primary font-bold text-xl">${product.price}</span>
+                      <span className="text-primary font-bold text-xl">₹{product.price}</span>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">{product.description}</p>
                     <div className="flex items-center justify-between">

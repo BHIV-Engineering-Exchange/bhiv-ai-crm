@@ -30,11 +30,6 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/customer-portal" replace />;
   }
 
-  // Non-customers should NOT use the customer portal
-  if (role !== 'customer' && isCustomerPortal) {
-    return <Navigate to="/" replace />;
-  }
-
   return children;
 };
 

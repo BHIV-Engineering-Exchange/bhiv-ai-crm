@@ -47,7 +47,7 @@ export const Sidebar = ({ isOpen, onToggle, isCollapsed, onCollapseToggle }) => 
       {
         name: 'Analytics & Reports',
         items: [
-          { name: 'Analytics', icon: BarChart3, path: '/analytics' },
+          { name: 'Analytics', icon: BarChart3, path: ROUTES.REPORTS },
         ]
       },
       {

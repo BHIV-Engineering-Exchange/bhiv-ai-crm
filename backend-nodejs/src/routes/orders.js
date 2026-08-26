@@ -68,9 +68,9 @@ router.get('/', async (req, res) => {
 });
 
 // @route   POST /api/orders
-// @desc    Create new order (customer places order)
-// @access  Private/Customer
-router.post('/', isCustomer, [
+// @desc    Create new order (customer or staff portal order)
+// @access  Private
+router.post('/', [
   body('items').isArray({ min: 1 }).withMessage('Order must have at least one item'),
   body('items.*.productId').notEmpty().withMessage('Product ID is required'),
   body('items.*.quantity').isInt({ min: 1 }).withMessage('Quantity must be at least 1')

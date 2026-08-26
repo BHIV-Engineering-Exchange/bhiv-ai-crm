@@ -31,7 +31,8 @@ export const Notifications = () => {
       setError(null);
 
       const response = await dashboardAPI.getAlerts();
-      const alerts = response.data?.alerts || response.data || [];
+      const rawAlerts = response.data?.data?.alerts || response.data?.alerts || (Array.isArray(response.data) ? response.data : []);
+      const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
 
       // Transform alerts to notifications format
       const formattedNotifications = alerts.map((alert, index) => ({

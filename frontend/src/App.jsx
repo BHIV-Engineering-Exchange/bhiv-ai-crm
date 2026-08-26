@@ -78,6 +78,7 @@ function App() {
             <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
             <Route path={ROUTES.EMAILS} element={<Emails />} />
             <Route path={ROUTES.REPORTS} element={<Reports />} />
+            <Route path="/analytics" element={<Reports />} />
             <Route path={ROUTES.SETTINGS} element={<Settings />} />
             <Route path={ROUTES.USERS} element={<Users />} />
             <Route path={ROUTES.SHOWCASE} element={<SupplierShowcase />} />

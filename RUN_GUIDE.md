@@ -52,6 +52,11 @@ SMTP_USER=blackholeinfiverse51@gmail.com
 SMTP_PASSWORD=kzqwqzuevmcvzhgu
 SMTP_FROM_EMAIL=blackholeinfiverse51@gmail.com
 SMTP_FROM_NAME="AI CRM Logistics"
+
+# UniGuru AI Service Configuration
+UNIGURU_SERVICE_URL=http://163.128.209.18:8007
+UNIGURU_API_TOKEN=your-uniguru-api-token
+UNIGURU_CALLER_NAME=bhiv-setu
 ```
 
 ### 2. Frontend Environment (`frontend/.env`)
