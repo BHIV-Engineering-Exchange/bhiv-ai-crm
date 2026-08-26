@@ -2,7 +2,7 @@ import React from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import Button from '../components/common/ui/Button';
 
-const INFIVERSE_DASHBOARD_URL = 'https://niyantran.blackholeinfiverse.com';
+const INFIVERSE_DASHBOARD_URL = import.meta.env.VITE_NIYANTRAN_URL || 'http://localhost:5174/';
 
 export const InfiverseEmbedded = () => {
   const handleOpenInNewTab = () => {

@@ -4,7 +4,7 @@ import Button from '../components/common/ui/Button';
 import Badge from '../components/common/ui/Badge';
 import { useAuth } from '@/context/MongoAuthContext';
 
-const AI_ARTHA_DASHBOARD_URL = import.meta.env.VITE_ARTHA_URL || 'https://artha.blackholeinfiverse.com/';
+const AI_ARTHA_DASHBOARD_URL = import.meta.env.VITE_ARTHA_URL || 'http://localhost:5173/';
 
 export const AIArthaEmbedded = () => {
   const { user, token } = useAuth();
