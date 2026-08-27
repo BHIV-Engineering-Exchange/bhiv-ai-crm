@@ -5,14 +5,37 @@ import { useAuth } from '@/context/MongoAuthContext';
 import { cn } from '@/utils/helpers';
 import Button from '../common/ui/Button';
 import Badge from '../common/ui/Badge';
+import { dashboardAPI } from '../../services/api/dashboardAPI';
 
 export const Header = ({ onMenuClick, isDark, onThemeToggle }) => {
-  const [notifications] = React.useState(3);
+  const [unreadCount, setUnreadCount] = React.useState(2);
   const [showUserMenu, setShowUserMenu] = React.useState(false);
   const [showSearch, setShowSearch] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
+
+  const fetchUnreadAlerts = React.useCallback(async () => {
+    const override = localStorage.getItem('setu_unread_alerts');
+    if (override !== null && override !== undefined) {
+      setUnreadCount(Number(override));
+      return;
+    }
+    try {
+      const res = await dashboardAPI.getAlerts();
+      const alerts = res.data?.data?.alerts || [];
+      setUnreadCount(alerts.length);
+    } catch (err) {
+      setUnreadCount(2);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchUnreadAlerts();
+    const handleUpdate = () => fetchUnreadAlerts();
+    window.addEventListener('setu_alerts_updated', handleUpdate);
+    return () => window.removeEventListener('setu_alerts_updated', handleUpdate);
+  }, [fetchUnreadAlerts]);
 
   const handleLogout = async () => {
     try {
@@ -144,9 +167,9 @@ export const Header = ({ onMenuClick, isDark, onThemeToggle }) => {
             >
               <Bell className="h-5 w-5" />
             </Button>
-            {notifications > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground animate-pulse-slow">
-                {notifications}
+                {unreadCount}
               </span>
             )}
           </div>

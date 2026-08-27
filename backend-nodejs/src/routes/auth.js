@@ -20,7 +20,7 @@ router.post('/register', [
 
     // Check if this is the first user (will be admin)
     const userCount = await User.countDocuments();
-    
+
     if (userCount > 0) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         success: false,

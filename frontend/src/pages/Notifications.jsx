@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Bell, AlertTriangle, CheckCircle, Info, XCircle,
   Settings, Filter, CheckCheck, RefreshCw
@@ -13,6 +14,7 @@ import { formatRelativeTime } from '@/utils/dateUtils';
 import { dashboardAPI } from '../services/api/dashboardAPI';
 
 export const Notifications = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -104,6 +106,17 @@ export const Notifications = () => {
     return variants[type] || 'default';
   };
 
+  const handleMarkAllRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    setMetrics(prev => ({
+      ...prev,
+      unread: 0
+    }));
+    localStorage.setItem('setu_unread_alerts', '0');
+    window.dispatchEvent(new Event('setu_alerts_updated'));
+  };
+
   const filteredNotifications = filter === 'all' 
     ? notifications 
     : filter === 'unread' 
@@ -133,11 +146,11 @@ export const Notifications = () => {
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleMarkAllRead}>
             <CheckCheck className="h-4 w-4 mr-2" />
             Mark All Read
           </Button>
-          <Button>
+          <Button onClick={() => navigate('/settings')}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>
