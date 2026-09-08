@@ -29,6 +29,7 @@ import Settings from './pages/Settings';
 import Users from './pages/Users';
 import SupplierShowcase from './pages/SupplierShowcase';
 import CustomerDashboard from './pages/CustomerDashboard';
+import BrightConnectionDemo from './pages/BrightConnectionDemo';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -82,6 +83,7 @@ function App() {
             <Route path={ROUTES.SETTINGS} element={<Settings />} />
             <Route path={ROUTES.USERS} element={<Users />} />
             <Route path={ROUTES.SHOWCASE} element={<SupplierShowcase />} />
+            <Route path={ROUTES.BRIGHT_CONNECTION} element={<BrightConnectionDemo />} />
             <Route path="/customer-portal" element={<CustomerDashboard />} />
           </Route>
 

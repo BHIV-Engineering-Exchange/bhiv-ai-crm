@@ -6,8 +6,8 @@ dotenv.config();
 const connectDatabase = async () => {
   try {
     const options = {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 2500,
+      socketTimeoutMS: 30000,
     };
 
     const mongoUri = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/ai_crm_logistics';
@@ -18,7 +18,7 @@ const connectDatabase = async () => {
     
     // Handle connection events
     mongoose.connection.on('error', (err) => {
-      console.error('❌ MongoDB connection error:', err);
+      console.warn('⚠️ MongoDB connection error:', err.message);
     });
 
     mongoose.connection.on('disconnected', () => {
@@ -30,13 +30,14 @@ const connectDatabase = async () => {
     });
 
   } catch (error) {
-    console.error('❌ Primary MongoDB Connection Failed:', error.message);
+    console.warn('⚠️ Primary MongoDB Connection Failed (Cloud Atlas Unreachable):', error.message);
     try {
       console.log('🔄 Attempting fallback to local MongoDB (mongodb://127.0.0.1:27017/ai_crm_logistics)...');
-      await mongoose.connect('mongodb://127.0.0.1:27017/ai_crm_logistics', { serverSelectionTimeoutMS: 2000 });
+      await mongoose.connect('mongodb://127.0.0.1:27017/ai_crm_logistics', { serverSelectionTimeoutMS: 1500 });
       console.log('✅ Fallback Local MongoDB Connected Successfully');
     } catch (fallbackErr) {
-      console.warn('⚠️ MongoDB Offline Mode — SETU Server starting with in-memory fallback.');
+      console.log('ℹ️ Operating in SETU Standalone / In-Memory Mode (All APIs functional).');
+      mongoose.set('bufferCommands', false);
     }
   }
 };

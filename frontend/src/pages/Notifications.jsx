@@ -13,6 +13,8 @@ import { LoadingSpinner } from '../components/common/ui/Spinner';
 import { formatRelativeTime } from '@/utils/dateUtils';
 import { dashboardAPI } from '../services/api/dashboardAPI';
 
+import { deviceNotificationService } from '@/services/deviceNotificationService';
+
 export const Notifications = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -117,6 +119,11 @@ export const Notifications = () => {
     window.dispatchEvent(new Event('setu_alerts_updated'));
   };
 
+  const handleTestDeviceNotification = async () => {
+    await deviceNotificationService.requestPermission();
+    deviceNotificationService.sendTestNotification();
+  };
+
   const filteredNotifications = filter === 'all' 
     ? notifications 
     : filter === 'unread' 
@@ -134,17 +141,17 @@ export const Notifications = () => {
         <div>
           <h1 className="text-3xl font-heading font-bold tracking-tight">Alert Management</h1>
           <p className="text-muted-foreground mt-1">
-            View and manage system notifications and alerts
+            View and manage system notifications and hardware device push alerts
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={handleTestDeviceNotification} className="border-primary/40 text-primary">
+            <Bell className="h-4 w-4 mr-2" />
+            Test Device Push
+          </Button>
           <Button variant="outline" size="sm" onClick={fetchNotifications}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
-          </Button>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
           </Button>
           <Button variant="outline" onClick={handleMarkAllRead}>
             <CheckCheck className="h-4 w-4 mr-2" />

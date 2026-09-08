@@ -23,6 +23,7 @@ export const ROUTES = {
   USERS: '/users',
   SHOWCASE: '/showcase',
   AI_QUERY: '/ai-query',
+  BRIGHT_CONNECTION: '/bright-connection',
 };
 
 export const STATUS_COLORS = {

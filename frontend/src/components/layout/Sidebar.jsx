@@ -25,6 +25,7 @@ export const Sidebar = ({ isOpen, onToggle, isCollapsed, onCollapseToggle }) => 
       {
         name: 'CRM & Logistics',
         items: [
+          { name: 'Bright Connection Demo', icon: Zap, path: ROUTES.BRIGHT_CONNECTION },
           { name: 'CRM Management', icon: Users, path: ROUTES.CRM },
           { name: 'Logistics & Inventory', icon: Package, path: ROUTES.LOGISTICS },
           { name: 'Infiverse Monitoring', icon: UsersRound, path: ROUTES.INFIVERSE },

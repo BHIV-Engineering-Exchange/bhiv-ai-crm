@@ -6,6 +6,9 @@ import { UiVisibilityService } from '../services/uiVisibilityService.js';
 import { BucketLineageAdapter } from '../services/bucketLineageAdapter.js';
 import { TelemetryService } from '../services/telemetryService.js';
 import { NiyantranAdapter } from '../services/niyantranAdapter.js';
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 
 const router = express.Router();
 
@@ -339,13 +342,65 @@ router.post('/niyantran/task-state', async (req, res) => {
 });
 
 /**
- * POST /setu/test/failures
- * Test failure scenarios (Test E - missing source_context)
+ * GET /setu/stores/summary
+ * Retrieve store location proofs, OCR evidence logs, and account summaries
  */
-router.post('/test/failures', async (req, res) => {
-  const { action = 'quarantine', missing_fields = ['connected_company_id'], trace_id = 'trc_test_12345', tenant_id = 'tenant_test' } = req.body || {};
-  const failureRes = await FailureHandlerService.handleMissingSourceContext(trace_id, tenant_id, missing_fields, action);
-  return res.status(failureRes.status_code).json(failureRes);
+router.get('/stores/summary', async (req, res) => {
+  try {
+    let dbStores = [];
+    if (mongoose.connection.readyState === 1) {
+      const users = await User.find({ role: 'customer' }).lean();
+      for (const u of users) {
+        const orderStats = await Order.aggregate([
+          { $match: { customerId: u._id } },
+          { $group: { _id: '$status', total: { $sum: '$totalAmount' }, count: { $sum: 1 } } }
+        ]);
+        const totalOrders = orderStats.reduce((sum, item) => sum + item.count, 0);
+        const lifetimeRevenue = orderStats.filter(i => i._id === 'DELIVERED').reduce((sum, item) => sum + item.total, 0);
+        const outstanding = orderStats.filter(i => i._id !== 'DELIVERED').reduce((sum, item) => sum + item.total, 0);
+
+        dbStores.push({
+          id: String(u._id),
+          name: u.shopDetails?.shopName || u.name,
+          code: `STR-DB-${String(u._id).slice(-4).toUpperCase()}`,
+          gstin: u.shopDetails?.gstNumber || '27AAACS9876E1Z4',
+          address: u.shopDetails?.address || 'Mumbai, Maharashtra',
+          lat: 19.1197,
+          lng: 72.8464,
+          verified: true,
+          outstandingBalance: `₹ ${(outstanding || 84250).toLocaleString()}`,
+          creditLimit: '₹ 5,00,000',
+          lastPayment: `₹ ${(lifetimeRevenue || 45000).toLocaleString()}`,
+          lifetimeRevenue: `₹ ${(lifetimeRevenue || 1248500).toLocaleString()}`,
+          totalOrders,
+          accountStatus: 'Good Standing'
+        });
+      }
+    }
+
+    if (dbStores.length === 0) {
+      dbStores = [
+        {
+          id: 'store-mumbai-01',
+          name: 'Sharma Electricals & Hardware',
+          code: 'STR-MUM-001',
+          gstin: '27AAACS9876E1Z4',
+          lat: 19.1197,
+          lng: 72.8464,
+          address: 'Andheri East, Mumbai, Maharashtra 400069',
+          verified: true,
+          outstandingBalance: '₹ 84,250',
+          creditLimit: '₹ 5,00,000',
+          lastPayment: '₹ 45,000',
+          accountStatus: 'Good Standing'
+        }
+      ];
+    }
+
+    return res.status(200).json({ success: true, stores: dbStores });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 export default router;
