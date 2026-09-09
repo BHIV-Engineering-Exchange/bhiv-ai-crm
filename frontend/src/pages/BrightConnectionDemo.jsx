@@ -17,6 +17,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import toast from 'react-hot-toast';
 import { ROUTES } from '@/utils/constants';
 import usePushNotifications from '../hooks/usePushNotifications';
+import crmAPI from '../services/api/crmAPI';
+import { DEMO_DEALERS, generateDemoVouchersForStore } from '../utils/brightDemoData';
 
 // Custom Leaflet Icons matching AI Artha Niyantran styling
 const AGENT_MAP_ICON = L.divIcon({
@@ -76,7 +78,7 @@ function LeafletMapLegend() {
       <p className="font-bold text-purple-400 text-[11px] uppercase tracking-wider mb-1">Niyantran Map Legend</p>
       <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded-full bg-blue-600 border border-white" />
-        <span>Agent (Rajesh Kumar - North Delhi)</span>
+        <span>Agent (Rajesh Menon - Andheri Agent)</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded bg-amber-500 border border-white" />
@@ -84,7 +86,7 @@ function LeafletMapLegend() {
       </div>
       <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded bg-amber-700/80 border border-white opacity-80" />
-        <span>Other Delhi Stores (Click to select)</span>
+        <span>Other Mumbai Stores (Click to select)</span>
       </div>
       <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded-full border-2 border-dashed border-emerald-400 bg-emerald-500/20" />
@@ -110,127 +112,21 @@ const PERIODS = [
   { label: 'This FY', id: 'fy' },
 ];
 
-// Exact Bright Connection Delhi/NCR Store Masters from AI Artha
-const DELHI_BRIGHT_STORES = [
-  {
-    id: 'store_bright_delhi_01',
-    code: 'BC-DEL-001',
-    name: 'Sharma Electronics',
-    company: 'Bright Connections - (from 1-Apr-24)',
-    tenantId: 'tenant_bright_connection',
-    city: 'Delhi',
-    region: 'North Delhi',
-    area: 'Karol Bagh',
-    address: 'Shop 14, Beadonpura, Ajmal Khan Road, Karol Bagh, New Delhi 110005',
-    geofence: { lat: 28.6519, lng: 77.1898, radiusMeters: 50 },
-    manager: 'Rajesh Kumar (Sales Executive - North Delhi)',
-    owner: 'Deepak Gupta / Sales Manager',
-    creditLimit: 500000,
-    outstanding: 245000,
-    overdue: 85000,
-    phone: '9810123456',
-    gstin: '07AABCS1234F1Z5',
-    tallySyncStatus: 'LIVE - Tally Prime Gateway Connected',
-    tallyLastSync: '1 minute ago',
-  },
-  {
-    id: 'store_bright_delhi_02',
-    code: 'BC-DEL-002',
-    name: 'Gupta Traders',
-    company: 'Bright Connections - (from 1-Apr-24)',
-    tenantId: 'tenant_bright_connection',
-    city: 'Delhi',
-    region: 'North Delhi',
-    area: 'Rohini',
-    address: 'Sector 7, Main Market, Rohini, New Delhi 110085',
-    geofence: { lat: 28.7498, lng: 77.0654, radiusMeters: 50 },
-    manager: 'Rajesh Kumar (Sales Executive)',
-    owner: 'Deepak Gupta / Sales Manager',
-    creditLimit: 400000,
-    outstanding: 178000,
-    overdue: 0,
-    phone: '9810234567',
-    gstin: '07AABCG5678G1Z3',
-    tallySyncStatus: 'LIVE - Tally Prime Gateway Connected',
-    tallyLastSync: '5 minutes ago',
-  },
-  {
-    id: 'store_bright_delhi_03',
-    code: 'BC-DEL-03',
-    name: 'Jain Hardware',
-    company: 'Bright Connections - (from 1-Apr-24)',
-    tenantId: 'tenant_bright_connection',
-    city: 'Delhi',
-    region: 'South Delhi',
-    area: 'Lajpat Nagar',
-    address: 'Central Market, Lajpat Nagar II, New Delhi 110024',
-    geofence: { lat: 28.5677, lng: 77.2405, radiusMeters: 50 },
-    manager: 'Deepak Gupta (Sales Manager)',
-    owner: 'Deepak Gupta / Sales Manager',
-    creditLimit: 300000,
-    outstanding: 156000,
-    overdue: 56000,
-    phone: '9810901234',
-    gstin: '07AABCJ4567P1Z8',
-    tallySyncStatus: 'LIVE - Tally Prime Gateway Connected',
-    tallyLastSync: '3 minutes ago',
-  },
-  {
-    id: 'store_bright_delhi_04',
-    code: 'BC-DEL-04',
-    name: 'Verma Sales Corp',
-    company: 'Bright Connections - (from 1-Apr-24)',
-    tenantId: 'tenant_bright_connection',
-    city: 'Delhi',
-    region: 'South Delhi',
-    area: 'Nehru Place',
-    address: 'Commercial Complex, Nehru Place, New Delhi 110019',
-    geofence: { lat: 28.5491, lng: 77.2530, radiusMeters: 50 },
-    manager: 'Deepak Gupta (Sales Manager)',
-    owner: 'Deepak Gupta / Sales Manager',
-    creditLimit: 600000,
-    outstanding: 289000,
-    overdue: 0,
-    phone: '9811012345',
-    gstin: '07AABCV8901Q1Z6',
-    tallySyncStatus: 'LIVE - Tally Prime Gateway Connected',
-    tallyLastSync: 'Just now',
-  },
-  {
-    id: 'store_bright_delhi_05',
-    code: 'BC-DEL-05',
-    name: 'Tiwari Electronics',
-    company: 'Bright Connections - (from 1-Apr-24)',
-    tenantId: 'tenant_bright_connection',
-    city: 'Delhi',
-    region: 'East Delhi',
-    area: 'Preet Vihar',
-    address: 'Vikas Marg, Preet Vihar, New Delhi 110092',
-    geofence: { lat: 28.6428, lng: 77.2971, radiusMeters: 50 },
-    manager: 'Priya Sharma (Field Agent)',
-    owner: 'Deepak Gupta / Sales Manager',
-    creditLimit: 350000,
-    outstanding: 175000,
-    overdue: 75000,
-    phone: '9811234567',
-    gstin: '07AABCT6789S1Z2',
-    tallySyncStatus: 'LIVE - Tally Prime Gateway Connected',
-    tallyLastSync: '4 minutes ago',
-  }
-];
+// Bright Connection Store Masters generated from demo script data (Mumbai Master)
+const MUMBAI_BRIGHT_STORES = DEMO_DEALERS;
 
 export const BrightConnectionDemo = () => {
   const navigate = useNavigate();
   usePushNotifications();
 
-  // Stores Master List state (Initialized to Delhi Artha Master Data)
-  const [storesList, setStoresList] = useState(DELHI_BRIGHT_STORES);
+  // Stores Master List state (Initialized to Mumbai Artha Master Data)
+  const [storesList, setStoresList] = useState(MUMBAI_BRIGHT_STORES);
 
   // Active tab state: 1 = Geofence Map, 2 = Live Camera OCR, 3 = Push Notification, 4 = Store Account Statement
   const [activeTab, setActiveTab] = useState(1);
 
-  // Active Selected Store Master (Defaults to Sharma Electronics - Karol Bagh, Delhi)
-  const [storeContext, setStoreContext] = useState(DELHI_BRIGHT_STORES[0]);
+  // Active Selected Store Master (Defaults to Andheri Electronics Hub - Mumbai)
+  const [storeContext, setStoreContext] = useState(MUMBAI_BRIGHT_STORES[0]);
 
   // Dynamic backend API store fetch with fallback
   useEffect(() => {
@@ -241,10 +137,10 @@ export const BrightConnectionDemo = () => {
         const users = response.data?.data?.users || response.data?.users || [];
         if (users && users.length > 0 && isMounted) {
           const dynamicStores = users.map((u, idx) => {
-            const fallback = DELHI_BRIGHT_STORES[idx % DELHI_BRIGHT_STORES.length];
+            const fallback = MUMBAI_BRIGHT_STORES[idx % MUMBAI_BRIGHT_STORES.length];
             return {
               id: u._id || `store_dynamic_${idx}`,
-              code: u.code || `BC-DEL-00${idx + 1}`,
+              code: u.code || `BC-MUM-00${idx + 1}`,
               name: u.shopDetails?.shopName || u.name || fallback.name,
               company: 'Bright Connections - (from 1-Apr-24)',
               tenantId: 'tenant_bright_connection',
@@ -268,7 +164,7 @@ export const BrightConnectionDemo = () => {
           setStoreContext(dynamicStores[0]);
         }
       } catch (err) {
-        console.warn('Backend API store fetch using Delhi Master fallback:', err);
+        console.warn('Backend API store fetch using Mumbai Master fallback:', err);
       }
     }
     loadDynamicStores();
@@ -279,8 +175,8 @@ export const BrightConnectionDemo = () => {
   const [isGeofenceVerifying, setIsGeofenceVerifying] = useState(false);
   const [isGeofenceVerified, setIsGeofenceVerified] = useState(false);
   const [agentCoords, setAgentCoords] = useState({
-    lat: 28.6521,
-    lng: 77.1900,
+    lat: 19.1199,
+    lng: 72.8466,
     isLive: false,
     distanceMeters: 14,
   });
@@ -333,22 +229,22 @@ export const BrightConnectionDemo = () => {
               toast.error(`Agent GPS is ${Math.round(dist / 1000)} km away from ${storeContext.name}`);
             }
           } else {
-            // Browser returned non-India IP (e.g. VPN or remote server), fallback to Delhi Field Agent coordinates
-            const agentDelhiLat = Number((storeContext.geofence.lat + 0.0002).toFixed(4));
-            const agentDelhiLng = Number((storeContext.geofence.lng + 0.0002).toFixed(4));
+            // Browser returned non-India IP (e.g. VPN or remote server), fallback to Mumbai Field Agent coordinates
+            const agentMumbaiLat = Number((storeContext.geofence.lat + 0.0002).toFixed(4));
+            const agentMumbaiLng = Number((storeContext.geofence.lng + 0.0002).toFixed(4));
             setAgentCoords({
-              lat: agentDelhiLat,
-              lng: agentDelhiLng,
+              lat: agentMumbaiLat,
+              lng: agentMumbaiLng,
               isLive: false,
               distanceMeters: 14,
             });
             setIsGeofenceVerifying(false);
             setIsGeofenceVerified(true);
-            toast.success(`Delhi Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name} (${storeContext.area}, Delhi)`);
+            toast.success(`Mumbai Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name} (${storeContext.area}, Mumbai)`);
           }
         },
         (error) => {
-          console.warn('Live Geolocation permission denied or unavailable, using Delhi demo coordinates:', error);
+          console.warn('Live Geolocation permission denied or unavailable, using Mumbai demo coordinates:', error);
           setIsGeofenceVerifying(false);
           setIsGeofenceVerified(true);
           setAgentCoords({
@@ -357,7 +253,7 @@ export const BrightConnectionDemo = () => {
             isLive: false,
             distanceMeters: 14,
           });
-          toast.success(`Delhi Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name}`);
+          toast.success(`Mumbai Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name}`);
         },
         { timeout: 3000, maximumAge: 60000 }
       );
@@ -371,13 +267,13 @@ export const BrightConnectionDemo = () => {
           isLive: false,
           distanceMeters: 14,
         });
-        toast.success(`Delhi Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name}`);
+        toast.success(`Mumbai Agent GPS Verified: Agent (Rajesh) is within 14m of ${storeContext.name}`);
       }, 800);
     }
   };
 
   const handleCalibrateToCurrentLocation = () => {
-    // Reset both Agent and Store to the exact Delhi Store Master coordinates
+    // Reset both Agent and Store to the exact Mumbai Store Master coordinates
     setAgentCoords({
       lat: Number((storeContext.geofence.lat + 0.0002).toFixed(4)),
       lng: Number((storeContext.geofence.lng + 0.0002).toFixed(4)),
@@ -385,7 +281,7 @@ export const BrightConnectionDemo = () => {
       distanceMeters: 14,
     });
     setIsGeofenceVerified(true);
-    toast.success(`Map re-centered to ${storeContext.name} (${storeContext.area}, Delhi)!`);
+    toast.success(`Map re-centered to ${storeContext.name} (${storeContext.area}, Mumbai)!`);
   };
 
   // ================= STEP 2: LIVE CAMERA & OCR STATE (EXACT ARTHA STOREFRONTOCR STYLE) =================
@@ -434,7 +330,7 @@ export const BrightConnectionDemo = () => {
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = 'bold 22px Inter, sans-serif';
-    ctx.fillText(`${storeArea.toUpperCase()}, ${storeCity.toUpperCase()} (DELHI NCR)`, 400, 240);
+    ctx.fillText(`${storeArea.toUpperCase()}, ${storeCity.toUpperCase()} (MUMBAI REGION)`, 400, 240);
 
     ctx.fillStyle = '#64748b';
     ctx.font = '16px monospace';
@@ -551,7 +447,7 @@ export const BrightConnectionDemo = () => {
       
       const fileLower = (uploadedFileName || '').toLowerCase();
       
-      // Smart OCR Signboard Extraction Engine
+      // Smart OCR Signboard Extraction Engine (Mumbai Masters)
       let targetStore = storeContext;
       let extractedShopName = storeContext.name;
       let extractedAddress = storeContext.address;
@@ -559,50 +455,85 @@ export const BrightConnectionDemo = () => {
       let extractedGstin = storeContext.gstin;
 
       // Check specific store keywords in filename
-      if (fileLower.includes('gupta')) {
-        const guptaMaster = storesList.find(s => s.code === 'BC-DEL-002' || s.name.toLowerCase().includes('gupta')) || storesList[1] || storeContext;
-        targetStore = guptaMaster;
-        extractedShopName = 'Gupta Traders & Electricals';
-        extractedAddress = guptaMaster.address;
-        extractedPhone = guptaMaster.phone;
-        extractedGstin = guptaMaster.gstin;
-      } else if (fileLower.includes('jain')) {
-        const jainMaster = storesList.find(s => s.code === 'BC-DEL-03' || s.name.toLowerCase().includes('jain')) || storesList[2] || storeContext;
-        targetStore = jainMaster;
-        extractedShopName = 'Jain Hardware Store';
-        extractedAddress = jainMaster.address;
-        extractedPhone = jainMaster.phone;
-        extractedGstin = jainMaster.gstin;
-      } else if (fileLower.includes('verma')) {
-        const vermaMaster = storesList.find(s => s.code === 'BC-DEL-04' || s.name.toLowerCase().includes('verma')) || storesList[3] || storeContext;
-        targetStore = vermaMaster;
-        extractedShopName = 'Verma Sales Corporation';
-        extractedAddress = vermaMaster.address;
-        extractedPhone = vermaMaster.phone;
-        extractedGstin = vermaMaster.gstin;
-      } else if (fileLower.includes('tiwari')) {
-        const tiwariMaster = storesList.find(s => s.code === 'BC-DEL-05' || s.name.toLowerCase().includes('tiwari')) || storesList[4] || storeContext;
-        targetStore = tiwariMaster;
-        extractedShopName = 'Tiwari Electronics';
-        extractedAddress = tiwariMaster.address;
-        extractedPhone = tiwariMaster.phone;
-        extractedGstin = tiwariMaster.gstin;
+      if (fileLower.includes('bandra')) {
+        const bandraMaster = storesList.find(s => s.code === 'BC-MUM-002' || s.name.toLowerCase().includes('bandra')) || storesList[1] || storeContext;
+        targetStore = bandraMaster;
+        extractedShopName = 'Bandra Trading Co';
+        extractedAddress = bandraMaster.address;
+        extractedPhone = bandraMaster.phone;
+        extractedGstin = bandraMaster.gstin;
+      } else if (fileLower.includes('churchgate')) {
+        const churchgateMaster = storesList.find(s => s.code === 'BC-MUM-003' || s.name.toLowerCase().includes('churchgate')) || storesList[2] || storeContext;
+        targetStore = churchgateMaster;
+        extractedShopName = 'Churchgate Stationers';
+        extractedAddress = churchgateMaster.address;
+        extractedPhone = churchgateMaster.phone;
+        extractedGstin = churchgateMaster.gstin;
+      } else if (fileLower.includes('dadar')) {
+        const dadarMaster = storesList.find(s => s.code === 'BC-MUM-004' || s.name.toLowerCase().includes('dadar')) || storesList[3] || storeContext;
+        targetStore = dadarMaster;
+        extractedShopName = 'Dadar Hardware Mart';
+        extractedAddress = dadarMaster.address;
+        extractedPhone = dadarMaster.phone;
+        extractedGstin = dadarMaster.gstin;
+      } else if (fileLower.includes('fort')) {
+        const fortMaster = storesList.find(s => s.code === 'BC-MUM-005' || s.name.toLowerCase().includes('fort')) || storesList[4] || storeContext;
+        targetStore = fortMaster;
+        extractedShopName = 'Fort Financial Services';
+        extractedAddress = fortMaster.address;
+        extractedPhone = fortMaster.phone;
+        extractedGstin = fortMaster.gstin;
+      } else if (fileLower.includes('juhu')) {
+        const juhuMaster = storesList.find(s => s.code === 'BC-MUM-006' || s.name.toLowerCase().includes('juhu')) || storesList[5] || storeContext;
+        targetStore = juhuMaster;
+        extractedShopName = 'Juhu Retail Paradise';
+        extractedAddress = juhuMaster.address;
+        extractedPhone = juhuMaster.phone;
+        extractedGstin = juhuMaster.gstin;
+      } else if (fileLower.includes('kurla')) {
+        const kurlaMaster = storesList.find(s => s.code === 'BC-MUM-007' || s.name.toLowerCase().includes('kurla')) || storesList[6] || storeContext;
+        targetStore = kurlaMaster;
+        extractedShopName = 'Kurla Wholesale Depot';
+        extractedAddress = kurlaMaster.address;
+        extractedPhone = kurlaMaster.phone;
+        extractedGstin = kurlaMaster.gstin;
+      } else if (fileLower.includes('parel')) {
+        const parelMaster = storesList.find(s => s.code === 'BC-MUM-008' || s.name.toLowerCase().includes('lower parel')) || storesList[7] || storeContext;
+        targetStore = parelMaster;
+        extractedShopName = 'Lower Parel Office Solutions';
+        extractedAddress = parelMaster.address;
+        extractedPhone = parelMaster.phone;
+        extractedGstin = parelMaster.gstin;
+      } else if (fileLower.includes('malad')) {
+        const maladMaster = storesList.find(s => s.code === 'BC-MUM-009' || s.name.toLowerCase().includes('malad')) || storesList[8] || storeContext;
+        targetStore = maladMaster;
+        extractedShopName = 'Malad Stationery World';
+        extractedAddress = maladMaster.address;
+        extractedPhone = maladMaster.phone;
+        extractedGstin = maladMaster.gstin;
+      } else if (fileLower.includes('powai')) {
+        const powaiMaster = storesList.find(s => s.code === 'BC-MUM-010' || s.name.toLowerCase().includes('powai')) || storesList[9] || storeContext;
+        targetStore = powaiMaster;
+        extractedShopName = 'Powai Tech Supplies';
+        extractedAddress = powaiMaster.address;
+        extractedPhone = powaiMaster.phone;
+        extractedGstin = powaiMaster.gstin;
       } else {
-        // Default for all uploaded photo images (TEST_SHOP_PHOTO.PNG, photo.jpg, camera captures)
-        // Recognizes the Sharma Electricals & Hardware Store signboard
-        const sharmaMaster = storesList.find(s => s.code === 'BC-DEL-001' || s.name.toLowerCase().includes('sharma')) || storesList[0] || storeContext;
-        targetStore = sharmaMaster;
-        extractedShopName = 'Sharma Electricals & Hardware Store';
-        extractedAddress = 'Shop 14, Beadonpura, Ajmal Khan Road, Karol Bagh, New Delhi 110005';
-        extractedPhone = '+91 98201 54321';
-        extractedGstin = '27AAACS9876E1Z4';
+        // Default for all uploaded photo images (TEST_SHOP_PHOTO.PNG, photo.jpg, camera captures, sample photo)
+        // Matches Andheri Electronics Hub
+        const andheriMaster = storesList.find(s => s.code === 'BC-MUM-001' || s.name.toLowerCase().includes('andheri')) || storesList[0] || storeContext;
+        targetStore = andheriMaster;
+        extractedShopName = 'Andheri Electronics Hub & Hardware';
+        extractedAddress = andheriMaster.address;
+        extractedPhone = '+91 98201 23456';
+        extractedGstin = andheriMaster.gstin;
       }
 
       // Automatically re-associate active storeContext to the matched dealer
       setStoreContext(targetStore);
 
       const extracted = {
-        extractedText: `${extractedShopName.toUpperCase()} - KAROL BAGH, DELHI`,
+        extractedText: `${extractedShopName.toUpperCase()} - ANDHERI WEST, MUMBAI`,
         matchedStoreName: targetStore.name,
         confidence: 98.6,
         gstin: extractedGstin,
@@ -643,7 +574,7 @@ export const BrightConnectionDemo = () => {
         <div>
           <p className="font-extrabold text-sm text-foreground">🔔 Push Notification (Manager Device)</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Field Agent (Rajesh Kumar) verified arrival at <strong>{storeContext.name}</strong> ({storeContext.area}, {storeContext.city})
+            Field Agent (Rajesh Menon) verified arrival at <strong>{storeContext.name}</strong> ({storeContext.area}, {storeContext.city})
           </p>
           <p className="text-[11px] text-purple-400 font-extrabold mt-1.5 hover:underline flex items-center gap-1">
             Viewing Store Summary & Tally Account Statement →
@@ -653,15 +584,12 @@ export const BrightConnectionDemo = () => {
     ), { duration: 12000, position: 'top-right' });
   };
 
-  // ================= STEP 4: ARTHA STORE ACCOUNT STATEMENT DATA (EXACT DELHI LEDGER) =================
+  // ================= STEP 4: ARTHA STORE ACCOUNT STATEMENT DATA (EXACT MUMBAI LEDGER) =================
   const [statementPeriod, setStatementPeriod] = useState('all');
 
-  const rawTransactions = useMemo(() => [
-    { date: '2026-09-06', type: 'Sale', number: `INV-${storeContext.code}-089`, narration: 'Consumer Electronics & Wiring Kits', amount: 85000, status: 'Cleared' },
-    { date: '2026-08-28', type: 'Sale', number: `ORD-${storeContext.code}-074`, narration: 'Smart Switches & Modular Boxes', amount: 160000, status: 'In Payment Window' },
-    { date: '2026-08-15', type: 'Receipt', number: `REC-${storeContext.code}-041`, narration: 'Delhi Commercial Bank RTGS Payment', amount: 75000, status: 'Completed' },
-    { date: '2026-08-01', type: 'Sale', number: `INV-${storeContext.code}-061`, narration: 'Heavy Duty Distribution Boards', amount: 75000, status: 'Cleared' },
-  ], [storeContext]);
+  const rawTransactions = useMemo(() => {
+    return generateDemoVouchersForStore(storeContext.code);
+  }, [storeContext]);
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();
@@ -728,7 +656,7 @@ export const BrightConnectionDemo = () => {
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-6xl mx-auto animate-fade-in">
 
-      {/* Top Header Banner (Artha Delhi Bright Connection Branding) */}
+      {/* Top Header Banner (Artha Mumbai Bright Connection Branding) */}
       <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 border border-purple-500/30 rounded-2xl p-5 shadow-xl text-white relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -742,24 +670,24 @@ export const BrightConnectionDemo = () => {
             </div>
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
               <Building2 className="h-6 w-6 text-purple-400" />
-              {storeContext.name} — ARTHA Delhi/NCR Context
+              {storeContext.name} — ARTHA Mumbai Context
             </h1>
             <p className="text-xs text-slate-300 mt-1">Company: <span className="text-white font-mono">{storeContext.company}</span> | Region: <span className="text-purple-300 font-bold">{storeContext.region} ({storeContext.city})</span></p>
           </div>
 
-          {/* Delhi Store Target Selector Dropdown */}
+          {/* Mumbai Store Target Selector Dropdown */}
           <div className="flex items-center gap-2">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">Select Delhi/NCR Store Target</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase">Select Mumbai Store Target</p>
               <select
                 value={storeContext.code}
                 onChange={(e) => {
-                  const found = DELHI_BRIGHT_STORES.find(s => s.code === e.target.value);
+                  const found = MUMBAI_BRIGHT_STORES.find(s => s.code === e.target.value);
                   if (found) setStoreContext(found);
                 }}
                 className="bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-700 focus:outline-none focus:border-purple-500"
               >
-                {DELHI_BRIGHT_STORES.map((st) => (
+                {MUMBAI_BRIGHT_STORES.map((st) => (
                   <option key={st.code} value={st.code}>
                     {st.name} ({st.area}, {st.city})
                   </option>
@@ -794,7 +722,7 @@ export const BrightConnectionDemo = () => {
       {/* SINGLE TAB CONTENT CONTAINER */}
       <div className="space-y-6">
 
-        {/* ================= TAB 1: INTERACTIVE LEAFLET GEOFENCE MAP (DELHI DATA) ================= */}
+        {/* ================= TAB 1: INTERACTIVE LEAFLET GEOFENCE MAP (MUMBAI DATA) ================= */}
         {activeTab === 1 && (
           <Card className="border-purple-500/30 shadow-lg">
             <CardHeader className="bg-muted/30 border-b border-border">
@@ -841,7 +769,7 @@ export const BrightConnectionDemo = () => {
                   scrollWheelZoom={true}
                 >
                   <MapRecenter center={[storeContext.geofence.lat, storeContext.geofence.lng]} />
-                  <MapFitBounds stores={DELHI_BRIGHT_STORES} agentCoords={agentCoords} />
+                  <MapFitBounds stores={MUMBAI_BRIGHT_STORES} agentCoords={agentCoords} />
 
                   {/* OpenStreetMap Standard Tiles */}
                   <TileLayer
@@ -876,8 +804,8 @@ export const BrightConnectionDemo = () => {
                     }}
                   />
 
-                  {/* Render ALL 5 Delhi Store Pins on the Map */}
-                  {DELHI_BRIGHT_STORES.map((store) => {
+                  {/* Render ALL 10 Mumbai Store Pins on the Map */}
+                  {MUMBAI_BRIGHT_STORES.map((store) => {
                     const isActive = store.id === storeContext.id;
                     return (
                       <Marker
@@ -919,7 +847,7 @@ export const BrightConnectionDemo = () => {
                     );
                   })}
 
-                  {/* Field Agent Marker (Rajesh Kumar) */}
+                  {/* Field Agent Marker (Rajesh Menon) */}
                   <Marker
                     position={[agentCoords.lat, agentCoords.lng]}
                     icon={AGENT_MAP_ICON}
@@ -927,9 +855,9 @@ export const BrightConnectionDemo = () => {
                     <Popup>
                       <div className="p-1 min-w-[200px]">
                         <p className="font-bold text-sm text-blue-900 flex items-center gap-1">
-                          🟢 Agent: Rajesh Kumar
+                          🟢 Agent: Rajesh Menon
                         </p>
-                        <p className="text-xs text-slate-600">Field Executive — North Delhi</p>
+                        <p className="text-xs text-slate-600">Field Executive — Andheri, Mumbai</p>
                         <div className="mt-2 pt-2 border-t border-slate-200 text-[11px] text-slate-700 space-y-1">
                           <p><strong>Current Store:</strong> {storeContext.name}</p>
                           <p><strong>GPS Accuracy:</strong> High ({agentCoords.distanceMeters}m offset)</p>
@@ -955,7 +883,7 @@ export const BrightConnectionDemo = () => {
                       onClick={handleCalibrateToCurrentLocation}
                       className="ml-2 bg-purple-600/80 hover:bg-purple-600 text-white text-[10px] px-2 py-1 rounded-md transition-colors flex items-center gap-1"
                     >
-                      <RotateCcw className="h-3 w-3" /> Reset View to Delhi Store
+                      <RotateCcw className="h-3 w-3" /> Reset View to Mumbai Store
                     </button>
                   </div>
                 </div>
@@ -994,20 +922,20 @@ export const BrightConnectionDemo = () => {
                 </div>
               </div>
 
-              {/* DELHI SHOPS MASTER SELECTOR GRID */}
+              {/* MUMBAI SHOPS MASTER SELECTOR GRID */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-extrabold text-xs uppercase tracking-wider text-purple-600 flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-purple-500" />
-                    Delhi/NCR Store Masters — Click to Switch Agent Target Shop
+                    Mumbai Store Masters — Click to Switch Agent Target Shop
                   </h3>
                   <Badge variant="outline" className="text-[10px] font-mono">
-                    {DELHI_BRIGHT_STORES.length} Stores Available
+                    {MUMBAI_BRIGHT_STORES.length} Stores Available
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {DELHI_BRIGHT_STORES.map((store) => {
+                  {MUMBAI_BRIGHT_STORES.map((store) => {
                     const isSelected = store.id === storeContext.id;
                     return (
                       <div
@@ -1099,7 +1027,7 @@ export const BrightConnectionDemo = () => {
                       <div>
                         <p>Agent Arrival Confirmed at {storeContext.name}</p>
                         <p className="text-xs text-muted-foreground font-normal">
-                          Agent (Rajesh Kumar) is physically within {agentCoords.distanceMeters}m of {storeContext.name} ({storeContext.area}, {storeContext.city}).
+                          Agent (Rajesh Menon) is physically within {agentCoords.distanceMeters}m of {storeContext.name} ({storeContext.area}, {storeContext.city}).
                         </p>
                       </div>
                     </div>
@@ -1140,7 +1068,7 @@ export const BrightConnectionDemo = () => {
                 onChange={handleFileUpload}
               />
 
-              {/* IDLE MODE: 2 Selection Cards like AI Artha */}
+              {/* IDLE MODE: 2 Selection Cards */}
               {ocrMode === 'idle' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                   <Card
