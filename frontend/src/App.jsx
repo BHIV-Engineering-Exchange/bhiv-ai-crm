@@ -90,7 +90,31 @@ function App() {
           {/* Catch all - redirect to dashboard in dev mode */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#0f172a',
+              color: '#f8fafc',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '0.75rem',
+              fontSize: '0.875rem',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#0f172a',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#0f172a',
+              },
+            },
+          }}
+        />
       </AuthProvider>
     </Router>
   );

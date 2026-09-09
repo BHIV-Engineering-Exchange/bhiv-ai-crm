@@ -1,3 +1,4 @@
+import React from 'react';
 import toast from 'react-hot-toast';
 
 class DeviceNotificationService {
@@ -77,13 +78,20 @@ class DeviceNotificationService {
 
     // 2. Fallback to in-app toast notification if native push is denied or fails
     const toastMessage = `${title}${notificationOptions.body ? `: ${notificationOptions.body}` : ''}`;
-    if (options.severity === 'critical' || options.severity === 'error') {
-      toast.error(toastMessage, { duration: 6000 });
-    } else if (options.severity === 'warning') {
-      toast(toastMessage, { icon: '⚠️', duration: 5000 });
-    } else {
-      toast.success(toastMessage, { duration: 4000 });
-    }
+    const targetUrl = options.url || '/bright-connection';
+    toast((t) => React.createElement(
+      'div',
+      {
+        className: 'cursor-pointer flex items-center gap-2',
+        onClick: () => {
+          toast.dismiss(t.id);
+          if (typeof window !== 'undefined') {
+            window.location.href = targetUrl;
+          }
+        }
+      },
+      React.createElement('span', { className: 'text-xs font-semibold' }, toastMessage)
+    ), { duration: 6000, position: 'top-right' });
 
     return null;
   }

@@ -17,17 +17,27 @@ export const Header = ({ onMenuClick, isDark, onThemeToggle }) => {
 
   const fetchUnreadAlerts = React.useCallback(async () => {
     const override = localStorage.getItem('setu_unread_alerts');
-    if (override !== null && override !== undefined) {
+    if (override !== null && override !== undefined && override !== '') {
       setUnreadCount(Number(override));
       return;
     }
+
+    let apiAlerts = [];
     try {
       const res = await dashboardAPI.getAlerts();
-      const alerts = res.data?.data?.alerts || [];
-      setUnreadCount(alerts.length);
+      apiAlerts = res.data?.data?.alerts || [];
     } catch (err) {
-      setUnreadCount(2);
+      apiAlerts = [];
     }
+
+    const readIds = new Set(JSON.parse(localStorage.getItem('setu_read_alert_ids') || '[]'));
+    const unreadApi = apiAlerts.filter((a, idx) => !readIds.has(a.id || `api_alert_${idx + 1}`)).length;
+
+    const customAlerts = JSON.parse(localStorage.getItem('setu_custom_notifications') || '[]');
+    const unreadCustom = customAlerts.filter((a) => !a.read && !readIds.has(a.id)).length;
+
+    const totalUnread = unreadApi + unreadCustom;
+    setUnreadCount(totalUnread);
   }, []);
 
   React.useEffect(() => {

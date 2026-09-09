@@ -28,41 +28,65 @@ export const Notifications = () => {
     critical: 0,
   });
 
-  // Fetch alerts from backend
+  // Fetch alerts from backend & local storage
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await dashboardAPI.getAlerts();
-      const rawAlerts = response.data?.data?.alerts || response.data?.alerts || (Array.isArray(response.data) ? response.data : []);
-      const alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
+      let alerts = [];
+      try {
+        const response = await dashboardAPI.getAlerts();
+        const rawAlerts = response.data?.data?.alerts || response.data?.alerts || (Array.isArray(response.data) ? response.data : []);
+        alerts = Array.isArray(rawAlerts) ? rawAlerts : [];
+      } catch (err) {
+        console.warn('Backend API alerts unavailable, loading local alerts:', err);
+      }
 
-      // Transform alerts to notifications format
-      const formattedNotifications = alerts.map((alert, index) => ({
-        id: alert.id || index + 1,
-        type: alert.severity === 'critical' ? 'error' :
-              alert.severity === 'high' ? 'warning' :
-              alert.severity === 'medium' ? 'info' : 'success',
-        title: alert.title || alert.message || 'Alert',
-        message: alert.message || alert.description || '',
-        timestamp: alert.timestamp ? new Date(alert.timestamp) : new Date(),
-        read: alert.read || false,
-        severity: alert.severity || 'medium'
+      const readIds = new Set(JSON.parse(localStorage.getItem('setu_read_alert_ids') || '[]'));
+
+      // Transform backend alerts to notifications format
+      const formattedApiAlerts = alerts.map((alert, index) => {
+        const id = alert.id || `api_alert_${index + 1}`;
+        const isRead = alert.read || readIds.has(id);
+        return {
+          id: id,
+          type: alert.severity === 'critical' ? 'error' :
+                alert.severity === 'high' ? 'warning' :
+                alert.severity === 'medium' ? 'info' : 'success',
+          title: alert.title || alert.message || 'Alert',
+          message: alert.message || alert.description || '',
+          timestamp: alert.timestamp ? new Date(alert.timestamp) : new Date(),
+          read: isRead,
+          severity: alert.severity || 'medium'
+        };
+      });
+
+      // Load custom notifications from localStorage (e.g. OCR Storefront Verifications)
+      const customAlerts = JSON.parse(localStorage.getItem('setu_custom_notifications') || '[]');
+      const formattedCustomAlerts = customAlerts.map((n) => ({
+        ...n,
+        read: n.read || readIds.has(n.id),
+        timestamp: new Date(n.timestamp),
       }));
 
-      setNotifications(formattedNotifications);
+      const allNotifications = [...formattedCustomAlerts, ...formattedApiAlerts];
+
+      setNotifications(allNotifications);
 
       // Calculate metrics
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayAlerts = formattedNotifications.filter(n => n.timestamp >= today);
-      const unreadAlerts = formattedNotifications.filter(n => !n.read);
-      const criticalAlerts = formattedNotifications.filter(n => n.severity === 'critical');
+      const todayAlerts = allNotifications.filter(n => n.timestamp >= today);
+      const unreadAlerts = allNotifications.filter(n => !n.read);
+      const criticalAlerts = allNotifications.filter(n => n.severity === 'critical');
+
+      const unreadCount = unreadAlerts.length;
+      localStorage.setItem('setu_unread_alerts', String(unreadCount));
 
       setMetrics({
-        total: formattedNotifications.length,
-        unread: unreadAlerts.length,
+        total: allNotifications.length,
+        unread: unreadCount,
         today: todayAlerts.length,
         critical: criticalAlerts.length,
       });
@@ -70,7 +94,6 @@ export const Notifications = () => {
     } catch (err) {
       console.error('Error fetching notifications:', err);
       setError(err.response?.data?.detail || err.message || 'Failed to load notifications');
-      // Fallback to empty array
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -79,13 +102,18 @@ export const Notifications = () => {
 
   useEffect(() => {
     fetchNotifications();
+    const handleUpdate = () => fetchNotifications();
+    window.addEventListener('setu_alerts_updated', handleUpdate);
     
     // Auto-refresh every 30 seconds
     const interval = setInterval(() => {
       fetchNotifications();
     }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('setu_alerts_updated', handleUpdate);
+      clearInterval(interval);
+    };
   }, [fetchNotifications]);
 
   const getIcon = (type) => {
@@ -109,19 +137,63 @@ export const Notifications = () => {
   };
 
   const handleMarkAllRead = () => {
+    const allIds = notifications.map(n => n.id);
+    localStorage.setItem('setu_read_alert_ids', JSON.stringify(allIds));
+
     const updated = notifications.map(n => ({ ...n, read: true }));
     setNotifications(updated);
     setMetrics(prev => ({
       ...prev,
       unread: 0
     }));
+
+    // Update custom notifications in localStorage
+    const customAlerts = JSON.parse(localStorage.getItem('setu_custom_notifications') || '[]');
+    const readCustom = customAlerts.map(n => ({ ...n, read: true }));
+    localStorage.setItem('setu_custom_notifications', JSON.stringify(readCustom));
     localStorage.setItem('setu_unread_alerts', '0');
+
     window.dispatchEvent(new Event('setu_alerts_updated'));
   };
 
   const handleTestDeviceNotification = async () => {
     await deviceNotificationService.requestPermission();
     deviceNotificationService.sendTestNotification();
+  };
+
+  const handleNotificationClick = (notification) => {
+    // 1. Persistently mark notification as read
+    const readIds = new Set(JSON.parse(localStorage.getItem('setu_read_alert_ids') || '[]'));
+    readIds.add(notification.id);
+    localStorage.setItem('setu_read_alert_ids', JSON.stringify(Array.from(readIds)));
+
+    const updated = notifications.map(n => n.id === notification.id ? { ...n, read: true } : n);
+    setNotifications(updated);
+    
+    const unreadCount = updated.filter(n => !n.read).length;
+    setMetrics(prev => ({
+      ...prev,
+      unread: unreadCount
+    }));
+    localStorage.setItem('setu_unread_alerts', String(unreadCount));
+
+    window.dispatchEvent(new Event('setu_alerts_updated'));
+
+    // 2. Intelligently route to corresponding feature page
+    const titleLower = (notification.title || '').toLowerCase();
+    const msgLower = (notification.message || '').toLowerCase();
+
+    if (notification.targetUrl) {
+      navigate(notification.targetUrl);
+    } else if (titleLower.includes('ocr') || titleLower.includes('storefront') || msgLower.includes('ocr') || msgLower.includes('bright connection') || msgLower.includes('raj prajapati') || msgLower.includes('rajesh')) {
+      navigate('/bright-connection');
+    } else if (titleLower.includes('order') || msgLower.includes('order') || msgLower.includes('dispatched') || msgLower.includes('waiting')) {
+      navigate('/logistics');
+    } else if (titleLower.includes('stock') || titleLower.includes('product') || msgLower.includes('stock') || msgLower.includes('restock')) {
+      navigate('/inventory');
+    } else {
+      navigate('/bright-connection');
+    }
   };
 
   const filteredNotifications = filter === 'all' 
@@ -145,10 +217,6 @@ export const Notifications = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleTestDeviceNotification} className="border-primary/40 text-primary">
-            <Bell className="h-4 w-4 mr-2" />
-            Test Device Push
-          </Button>
           <Button variant="outline" size="sm" onClick={fetchNotifications}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -243,10 +311,11 @@ export const Notifications = () => {
               return (
                 <div
                   key={notification.id}
-                  className={`flex items-start gap-4 p-4 rounded-lg border transition-all ${
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`flex items-start gap-4 p-4 rounded-lg border transition-all cursor-pointer hover:border-primary/50 hover:shadow-md ${
                     notification.read
-                      ? 'bg-muted/30 border-border'
-                      : 'bg-background border-primary/20'
+                      ? 'bg-muted/30 border-border opacity-75'
+                      : 'bg-background border-primary/30 shadow-sm'
                   }`}
                 >
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -270,9 +339,14 @@ export const Notifications = () => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatRelativeTime(notification.timestamp)}
-                    </p>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40 text-xs">
+                      <span className="text-muted-foreground">
+                        {formatRelativeTime(notification.timestamp)}
+                      </span>
+                      <span className="font-bold text-primary hover:underline flex items-center gap-1">
+                        View Page Details →
+                      </span>
+                    </div>
                   </div>
                 </div>
               );

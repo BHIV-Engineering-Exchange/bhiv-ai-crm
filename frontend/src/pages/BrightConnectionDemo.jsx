@@ -560,28 +560,57 @@ export const BrightConnectionDemo = () => {
   const handleSendNotification = () => {
     setNotificationSent(true);
     setActiveTab(3);
-    toast((t) => (
+
+    // Persist notification into Bell Notifications & Alert Management page
+    const newAlert = {
+      id: `notif_ocr_${Date.now()}`,
+      type: 'success',
+      severity: 'medium',
+      title: `Storefront OCR Verified: ${storeContext.name}`,
+      message: `Field Agent (Rajesh Menon) verified arrival & OCR at ${storeContext.name} (${storeContext.area}, ${storeContext.city})`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      targetUrl: '/bright-connection',
+    };
+
+    try {
+      const existingAlerts = JSON.parse(localStorage.getItem('setu_custom_notifications') || '[]');
+      const updatedAlerts = [newAlert, ...existingAlerts];
+      localStorage.setItem('setu_custom_notifications', JSON.stringify(updatedAlerts));
+      
+      const unreadCount = updatedAlerts.filter(a => !a.read).length;
+      localStorage.setItem('setu_unread_alerts', String(unreadCount));
+
+      // Trigger global event so Header Bell badge and Alert Management update instantly
+      window.dispatchEvent(new Event('setu_alerts_updated'));
+    } catch (err) {
+      console.warn('Error persisting notification:', err);
+    }
+
+    toast.custom((t) => (
       <div
-        className="flex items-start gap-3 cursor-pointer p-1"
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-md w-full bg-slate-900 border border-emerald-500/40 shadow-2xl rounded-xl pointer-events-auto flex items-start gap-3 p-4 cursor-pointer hover:border-emerald-500/80 transition-all text-left z-50`}
         onClick={() => {
           toast.dismiss(t.id);
-          setActiveTab(3);
+          navigate('/bright-connection');
         }}
       >
-        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 border border-purple-500/40 mt-0.5">
-          <Bell className="h-5 w-5 text-purple-400 animate-bounce" />
+        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/40 mt-0.5">
+          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
         </div>
-        <div>
-          <p className="font-extrabold text-sm text-foreground">🔔 Push Notification (Manager Device)</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Field Agent (Rajesh Menon) verified arrival at <strong>{storeContext.name}</strong> ({storeContext.area}, {storeContext.city})
+        <div className="flex-1 min-w-0">
+          <p className="font-extrabold text-sm text-white">Storefront Verified & Attached!</p>
+          <p className="text-xs text-slate-300 mt-1 leading-snug">
+            Field Agent (Rajesh Menon) verified arrival & OCR at <strong className="text-emerald-400">{storeContext.name}</strong> ({storeContext.area}, {storeContext.city})
           </p>
-          <p className="text-[11px] text-purple-400 font-extrabold mt-1.5 hover:underline flex items-center gap-1">
-            Viewing Store Summary & Tally Account Statement →
+          <p className="text-[11px] text-emerald-400 font-extrabold mt-2 hover:underline flex items-center gap-1">
+            Saved to Bell Icon • Click to open page details →
           </p>
         </div>
       </div>
-    ), { duration: 12000, position: 'top-right' });
+    ), { duration: 6000, position: 'top-right' });
   };
 
   // ================= STEP 4: ARTHA STORE ACCOUNT STATEMENT DATA (EXACT MUMBAI LEDGER) =================
@@ -1243,7 +1272,6 @@ export const BrightConnectionDemo = () => {
                         <div className="space-y-3 pt-1">
                           <Button
                             onClick={() => {
-                              toast.success(`Storefront verified and attached to ${storeContext.name}!`);
                               handleSendNotification();
                             }}
                             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 text-xs flex items-center justify-center gap-2 shadow-xl animate-pulse"
