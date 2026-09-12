@@ -128,6 +128,8 @@ app.use('/api/mitra', mitraRoutes);
 app.use('/setu', setuRoutes);
 app.use('/api/setu', setuRoutes);
 app.use('/v1/setu', setuRoutes);
+app.use('/projects', setuRoutes);
+app.use('/tasks', setuRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/delivery', deliveryRoutes);
