@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-09-12T17:08:22.573547",
+    "level": "info",
+    "title": "Field Visit Alert - Andheri Electronics Live (LOC_MUMBAI_WEST)",
+    "message": "Agent AGENT_77 has checked in at Andheri Electronics Live. Evidence recorded.",
+    "details": {
+      "Company": "Bright Connection",
+      "Store ID": "STR_ANDHERI_LIVE_01",
+      "Location": "LOC_MUMBAI_WEST",
+      "Agent ID": "AGENT_77",
+      "Photo Evidence": "https://s3.brightconnection.tally/proof/live_str_andheri_01.jpg",
+      "Provenance Timestamp": "2026-09-12T11:38:22.573482Z"
+    }
+  }
+]

@@ -1,4 +1,5 @@
 from typing import Any, Dict
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -13,6 +14,13 @@ from .niyantran_integration_adapter import NiyantranIntegrationAdapter
 from .contract_validation import ContractValidator, ContractValidationError
 from .failure_handler import FailureHandler
 from .ui_visibility_service import SetuUIVisibilityService
+from .bright_connection_connector import BrightConnectionConnector
+
+try:
+    from notification_service import send_info_alert
+except ImportError:
+    def send_info_alert(title: str, message: str, details: Dict = None):
+        print(f"ALERT: {title} - {message} - {details}")
 
 
 def create_setu_router(
@@ -117,6 +125,103 @@ def create_setu_router(
     async def get_telemetry(trace_id: str, current_user: User = Depends(get_current_user)):
         events = await telemetry_layer.list_events(trace_id)
         return {"trace_id": trace_id, "events": events, "count": len(events)}
+
+    # PHASE 1A - BRIGHT CONNECTION ENDPOINTS
+    @router.post("/bright/catalog")
+    async def ingest_bright_catalog(
+        payload: Dict[str, Any],
+        current_user: User = Depends(get_current_user)
+    ):
+        """Ingest Bright Connection Catalog"""
+        items = payload.get("items", [])
+        if not items:
+            items = [payload] if "sku" in payload else []
+            
+        canonical_products = BrightConnectionConnector.transform_product_catalog(
+            items,
+            sync_id=payload.get("sync_id")
+        )
+        return {"success": True, "tenant_id": BrightConnectionConnector.TENANT_ID, "canonical_records": canonical_products}
+
+    @router.post("/bright/orders")
+    async def ingest_bright_orders(
+        payload: Dict[str, Any],
+        current_user: User = Depends(get_current_user)
+    ):
+        """Ingest Bright Connection Orders"""
+        canonical_order = BrightConnectionConnector.transform_order_payload(
+            payload,
+            sync_id=payload.get("sync_id")
+        )
+        return {"success": True, "tenant_id": BrightConnectionConnector.TENANT_ID, "canonical_record": canonical_order}
+
+    @router.post("/bright/field-visits")
+    async def ingest_bright_field_visits(
+        payload: Dict[str, Any],
+        current_user: User = Depends(get_current_user)
+    ):
+        """Ingest Bright Connection Field Visits and trigger Dealer Notification"""
+        canonical_evidence = BrightConnectionConnector.transform_field_visit_evidence(
+            payload,
+            sync_id=payload.get("sync_id")
+        )
+        
+        # ── Trigger Dealer/Admin Notification with Account Context ──
+        source_context = canonical_evidence.get("source_context", {})
+        store_id = source_context.get("store_id", "Unknown Store")
+        store_name = source_context.get("store_name", "Unknown Store Name")
+        location = source_context.get("location_identifier", "Unknown Location")
+        company = source_context.get("connected_company_name", "Unknown Company")
+        
+        agent_id = canonical_evidence.get("agent_id", "Unknown Agent")
+        
+        title = f"Field Visit Alert - {store_name} ({location})"
+        message = f"Agent {agent_id} has checked in at {store_name}. Evidence recorded."
+        details = {
+            "Company": company,
+            "Store ID": store_id,
+            "Location": location,
+            "Agent ID": agent_id,
+            "Photo Evidence": canonical_evidence.get("display_photo_url", "None"),
+            "Provenance Timestamp": source_context.get("received_at")
+        }
+        
+        send_info_alert(title, message, details)
+        
+        return {
+            "success": True, 
+            "tenant_id": BrightConnectionConnector.TENANT_ID, 
+            "canonical_record": canonical_evidence,
+            "notification_sent": True
+        }
+
+    # PHASE 1B - MITRA ACCOUNT SCOPED QUERY
+    @router.post("/mitra/query")
+    async def query_mitra(
+        payload: Dict[str, Any],
+        current_user: User = Depends(get_current_user)
+    ):
+        """Simulate a tenant-scoped Mitra Query"""
+        query = payload.get("query")
+        tenant_id = payload.get("tenant_id")
+        store_id = payload.get("store_id")
+        
+        if not tenant_id or not store_id:
+            raise HTTPException(status_code=400, detail="tenant_id and store_id are required for scoped queries")
+            
+        # Simulate Mitra returning a bounded answer based on the store context
+        return {
+            "success": True,
+            "query": query,
+            "response": f"Mocked intelligence response for {store_id} within tenant {tenant_id}. Only local inventory was considered.",
+            "provenance": {
+                "source_system": "tally",
+                "tenant_id": tenant_id,
+                "store_id": store_id,
+                "data_boundary_enforced": True,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+        }
 
     # PHASE 1 - SIGNAL INGESTION ENDPOINTS
     @router.post("/signals/ingest")
