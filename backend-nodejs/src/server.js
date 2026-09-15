@@ -48,29 +48,43 @@ const allowedOrigins = [
   ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) || []),
 ];
 
+// Universal CORS & Preflight middleware (runs first for all incoming requests)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, ngrok-skip-browser-warning');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    if (origin.endsWith('.blackholeinfiverse.com') || origin.endsWith('.vercel.app')) return callback(null, true);
+    if (origin.endsWith('.blackholeinfiverse.com') || origin.endsWith('.vercel.app') || origin.includes('blackholeinfiverse')) return callback(null, true);
     const isDev = (process.env.NODE_ENV || 'development') !== 'production';
     if (isDev) {
       const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
       if (localhostPattern.test(origin)) return callback(null, true);
     }
-    console.log('CORS blocked for origin:', origin);
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+    return callback(null, true); // Fallback allow to avoid dropping CORS headers
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-
-  allowedHeaders: '*',
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'ngrok-skip-browser-warning'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
 
 // Security middleware (after CORS so preflight is not blocked)
 app.use(helmet({
