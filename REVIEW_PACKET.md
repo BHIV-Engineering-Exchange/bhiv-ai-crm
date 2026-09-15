@@ -3,13 +3,13 @@
 **Repository Root:** `ai-crm/`  
 **System Owner:** Shashank Mishra  
 **Target Reviewers / Successors:** Vijay Dhawan, Isha Singh, Soham Kotkar  
-**Ecosystem Acceptance Authority:** Rishabh Yadav  
+**Ecosystem Acceptance Authority:** Rishabh Yadav
 
 ---
 
 ## 1. System Overview & Core Architecture
 
-Per `ECOSYSTEM_REPOSITORY_MAP.md`, this repository contains the **CRM** (relationship intelligence), **Logistics** (inventory/order/supplier management), and the **SETU** module. 
+Per `ECOSYSTEM_REPOSITORY_MAP.md`, this repository contains the **CRM** (relationship intelligence), **Logistics** (inventory/order/supplier management), and the **SETU** module.
 
 Successors must understand the single most important architectural fact about this repo: **It contains two completely separate backend applications that write to a single shared MongoDB database:**
 
@@ -40,9 +40,9 @@ flowchart TB
     PyBackend --> Mongo
 ```
 
-*   **`backend/` (FastAPI):** Exposes 112 endpoints. Runs the SETU integration logic, procurement module, customer portal, and serves 3 standalone Streamlit dashboards.
-*   **`backend-nodejs/` (Express):** Exposes 70 endpoints. This is the **primary backend** that the React frontend actually communicates with for day-to-day operations.
-*   **MongoDB Atlas:** Shared by both backends, exposing a high-risk schema collision.
+- **`backend/` (FastAPI):** Exposes 112 endpoints. Runs the SETU integration logic, procurement module, customer portal, and serves 3 standalone Streamlit dashboards.
+- **`backend-nodejs/` (Express):** Exposes 70 endpoints. This is the **primary backend** that the React frontend actually communicates with for day-to-day operations.
+- **MongoDB Atlas:** Shared by both backends, exposing a high-risk schema collision.
 
 ---
 
@@ -66,8 +66,8 @@ Follow this step-by-step sequence to review the system components:
 2.  **Executive Overview:** Read [handover/01_EXECUTIVE_OVERVIEW.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/01_EXECUTIVE_OVERVIEW.md) for readiness assessment and limitations.
 3.  **Architecture:** Review [handover/02_ARCHITECTURE_GUIDE.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/02_ARCHITECTURE_GUIDE.md) to understand service boundaries and data flow.
 4.  **Source Code:** Study the separate walkthroughs:
-    *   [handover/03a_BACKEND_PYTHON_WALKTHROUGH.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/03a_BACKEND_PYTHON_WALKTHROUGH.md) (FastAPI + SETU)
-    *   [handover/03b_BACKEND_NODEJS_WALKTHROUGH.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/03b_BACKEND_NODEJS_WALKTHROUGH.md) (Express)
+    - [handover/03a_BACKEND_PYTHON_WALKTHROUGH.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/03a_BACKEND_PYTHON_WALKTHROUGH.md) (FastAPI + SETU)
+    - [handover/03b_BACKEND_NODEJS_WALKTHROUGH.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/03b_BACKEND_NODEJS_WALKTHROUGH.md) (Express)
 5.  **Database & Schema Drift:** Review [handover/05_DATABASE_GUIDE.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/05_DATABASE_GUIDE.md) to examine collection-level schema incompatibilities.
 6.  **Deployments & Operations:** Read [handover/04_DEPLOYMENT_GUIDE.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/04_DEPLOYMENT_GUIDE.md) and [handover/08_OPERATIONS_RUNBOOK.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/08_OPERATIONS_RUNBOOK.md).
 7.  **Bugs & Risks:** Check [handover/07_KNOWN_ISSUES_REGISTER.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/07_KNOWN_ISSUES_REGISTER.md) for the 15 verified findings.
@@ -78,12 +78,12 @@ Follow this step-by-step sequence to review the system components:
 
 ## 3. Core Runtime & API Summary
 
-*   **FastAPI Backend Default Port:** `8000` (runs Uvicorn)
-*   **Express Backend Default Port:** `8000` (collides with FastAPI)
-*   **API Documentation:**
-    *   Python endpoints (FastAPI): [handover/06a_API_DOCUMENTATION_PYTHON_BACKEND.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/06a_API_DOCUMENTATION_PYTHON_BACKEND.md)
-    *   NodeJS endpoints (Express): [handover/06b_API_DOCUMENTATION_NODEJS_BACKEND.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/06b_API_DOCUMENTATION_NODEJS_BACKEND.md)
-*   **Dependency Map:** See [handover/09_DEPENDENCY_MAP.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/09_DEPENDENCY_MAP.md) for details on external APIs (Google Maps, Office 365, Gemini) and Niyantran integration.
+- **FastAPI Backend Default Port:** `8000` (runs Uvicorn)
+- **Express Backend Default Port:** `8000` (collides with FastAPI)
+- **API Documentation:**
+  - Python endpoints (FastAPI): [handover/06a_API_DOCUMENTATION_PYTHON_BACKEND.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/06a_API_DOCUMENTATION_PYTHON_BACKEND.md)
+  - NodeJS endpoints (Express): [handover/06b_API_DOCUMENTATION_NODEJS_BACKEND.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/06b_API_DOCUMENTATION_NODEJS_BACKEND.md)
+- **Dependency Map:** See [handover/09_DEPENDENCY_MAP.md](file:///c:/Users/shash/OneDrive/Documents/New folder/ai-crm/handover/09_DEPENDENCY_MAP.md) for details on external APIs (Google Maps, Office 365, Gemini) and Niyantran integration.
 
 ---
 
@@ -103,18 +103,40 @@ The following items are production blockers and should be resolved immediately:
 
 This checklist must be signed off by successors and the product owner to verify completion:
 
-| Task / Verify Item | Status | Verified By | Date | Comments |
-| :--- | :---: | :--- | :--- | :--- |
-| Both backends run locally | [ ] | | | Requires port re-configuration |
-| FastAPI code integrity check | [ ] | | | Checked 135 files via `py_compile` |
-| Node Express code integrity check | [ ] | | | Checked 28 files via `node --check` |
-| Shared DB collection structures reconciled | [ ] | | | Needs alignment on schemas |
-| Port assignment separated | [ ] | | | Assign unique ports |
-| Missing `start_server.py` script fixed | [ ] | | | Create script or fix Dockerfile |
-| Frontend builds and points to correct backend | [ ] | | | Verified via `npm run build` |
-| Demonstration Video recorded | [ ] | | | Plan outlined in `00_HANDOVER_PLAN.md` |
-| Production Evidence Pack compiled | [ ] | | | Add Atlas & Live Ingress screenshots |
+| Task / Verify Item                            | Status | Verified By | Date | Comments                               |
+| :-------------------------------------------- | :----: | :---------- | :--- | :------------------------------------- |
+| Both backends run locally                     |  [ ]   |             |      | Requires port re-configuration         |
+| FastAPI code integrity check                  |  [ ]   |             |      | Checked 135 files via `py_compile`     |
+| Node Express code integrity check             |  [ ]   |             |      | Checked 28 files via `node --check`    |
+| Shared DB collection structures reconciled    |  [ ]   |             |      | Needs alignment on schemas             |
+| Port assignment separated                     |  [ ]   |             |      | Assign unique ports                    |
+| Missing `start_server.py` script fixed        |  [ ]   |             |      | Create script or fix Dockerfile        |
+| Frontend builds and points to correct backend |  [ ]   |             |      | Verified via `npm run build`           |
+| Demonstration Video recorded                  |  [ ]   |             |      | Plan outlined in `00_HANDOVER_PLAN.md` |
+| Production Evidence Pack compiled             |  [ ]   |             |      | Add Atlas & Live Ingress screenshots   |
 
 ---
 
-*This document supersedes all older root-level handover and gap document checklists in this repository.*
+_This document supersedes all older root-level handover and gap document checklists in this repository._
+
+---
+
+## 6. T-GOV-002 Phase 2 Security Proof
+
+Implemented in the FastAPI backend without changing SETU constitutional ownership:
+
+| Requirement             | Implementation                                                                                                                      | Verification                                                                       |
+| :---------------------- | :---------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| JWT RS256 verification  | `backend/auth_system.py` signs with configured private RSA key and verifies with public RSA key; production requires both variables | `test_access_tokens_are_rs256_and_verify_with_public_key` and HS256 rejection test |
+| Replay mitigation table | `backend/phase2_security.py` stores `(jti, request_id)` claims in SQLite with expiry cleanup and transactional uniqueness           | Duplicate claim test passes                                                        |
+| Immutable audit emitter | SHA-256 hash chain with canonical JSON and previous-hash linkage                                                                    | Database tamper test changes verification from true to false                       |
+| Exact dependency pins   | `backend/requirements.txt` contains `==` pins, including `cryptography==49.0.0`                                                     | `git diff --check`; requirements review                                            |
+
+Focused verification executed on 2026-09-12:
+
+```text
+python -m pytest -q tests/test_phase2_security.py
+4 passed, 6 warnings
+```
+
+The warnings are pre-existing `datetime.utcnow()` deprecation warnings in `auth_system.py`. A live VM/Bright Connection demonstration was not executed in this coding environment; production evidence still requires the deployed URL, trace ID, tenant/account context, logs, and screenshots.
