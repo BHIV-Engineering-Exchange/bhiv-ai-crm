@@ -40,9 +40,11 @@ connectDatabase();
 const allowedOrigins = [
   'https://ai-crm-sigma-five.vercel.app',
   'https://setu.blackholeinfiverse.com',
+  'https://niyantrankendra.blackholeinfiverse.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
+  'http://localhost:5174',
   ...(process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) || []),
 ];
 
@@ -50,6 +52,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (origin.endsWith('.blackholeinfiverse.com') || origin.endsWith('.vercel.app')) return callback(null, true);
     const isDev = (process.env.NODE_ENV || 'development') !== 'production';
     if (isDev) {
       const localhostPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -60,6 +63,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+
   allowedHeaders: '*',
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   optionsSuccessStatus: 200,
