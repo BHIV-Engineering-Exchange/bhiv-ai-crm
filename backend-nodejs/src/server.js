@@ -114,8 +114,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
-// Health check endpoint
-app.get('/health', (req, res) => {
+// Health check handler
+const healthHandler = (req, res) => {
   const mongoReady = mongoose.connection.readyState === 1;
   res.status(mongoReady ? 200 : 503).json({
     success: mongoReady,
@@ -129,7 +129,13 @@ app.get('/health', (req, res) => {
       mitra: process.env.SETU_MITRA_API_KEY ? 'configured' : 'not_configured',
     },
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
+app.get('/api/setu/health', healthHandler);
+app.get('/setu/health', healthHandler);
+
 
 // API routes
 app.use('/api/auth', authRoutes);
