@@ -91,6 +91,9 @@ export const Notifications = () => {
         critical: criticalAlerts.length,
       });
 
+      // Automatically sync unread alerts with hardware device push notification
+      deviceNotificationService.syncAndPushNewNotifications(allNotifications);
+
     } catch (err) {
       console.error('Error fetching notifications:', err);
       setError(err.response?.data?.detail || err.message || 'Failed to load notifications');
@@ -217,6 +220,10 @@ export const Notifications = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={handleTestDeviceNotification}>
+            <Bell className="h-4 w-4 mr-2 text-primary animate-pulse" />
+            Test Device Push
+          </Button>
           <Button variant="outline" size="sm" onClick={fetchNotifications}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh

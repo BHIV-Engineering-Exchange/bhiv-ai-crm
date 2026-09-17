@@ -324,11 +324,23 @@ export const Settings = () => {
                 />
               </label>
             </div>
-            <div className="flex justify-end">
-              <Button onClick={() => handleSaveSettings('notifications')} disabled={loading}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Notification Settings
-              </Button>
+            <div className="pt-3 border-t border-border flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-muted-foreground font-medium">Browser Permission:</span>
+                <Badge variant={deviceNotificationService.getPermissionState() === 'granted' ? 'success' : 'warning'}>
+                  {deviceNotificationService.getPermissionState().toUpperCase()}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => deviceNotificationService.sendTestNotification()}>
+                  <Bell className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                  Test Device Push
+                </Button>
+                <Button onClick={() => handleSaveSettings('notifications')} disabled={loading}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Notification Settings
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

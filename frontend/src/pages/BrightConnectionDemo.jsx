@@ -17,6 +17,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import toast from 'react-hot-toast';
 import { ROUTES } from '@/utils/constants';
 import usePushNotifications from '../hooks/usePushNotifications';
+import { deviceNotificationService } from '@/services/deviceNotificationService';
 import crmAPI from '../services/api/crmAPI';
 import { DEMO_DEALERS, generateDemoVouchersForStore } from '../utils/brightDemoData';
 
@@ -573,44 +574,48 @@ export const BrightConnectionDemo = () => {
       targetUrl: '/bright-connection',
     };
 
-    try {
-      const existingAlerts = JSON.parse(localStorage.getItem('setu_custom_notifications') || '[]');
-      const updatedAlerts = [newAlert, ...existingAlerts];
-      localStorage.setItem('setu_custom_notifications', JSON.stringify(updatedAlerts));
-      
-      const unreadCount = updatedAlerts.filter(a => !a.read).length;
-      localStorage.setItem('setu_unread_alerts', String(unreadCount));
-
-      // Trigger global event so Header Bell badge and Alert Management update instantly
-      window.dispatchEvent(new Event('setu_alerts_updated'));
-    } catch (err) {
-      console.warn('Error persisting notification:', err);
-    }
+    // Persist notification and push native hardware device alert
+    deviceNotificationService.dispatchAndPushNotification(newAlert);
 
     toast.custom((t) => (
       <div
         className={`${
           t.visible ? 'animate-enter' : 'animate-leave'
-        } max-w-md w-full bg-slate-900 border border-emerald-500/40 shadow-2xl rounded-xl pointer-events-auto flex items-start gap-3 p-4 cursor-pointer hover:border-emerald-500/80 transition-all text-left z-50`}
+        } max-w-md w-full bg-slate-900/95 backdrop-blur-xl border border-emerald-500/40 shadow-[0_12px_40px_rgba(16,185,129,0.3)] rounded-2xl pointer-events-auto flex flex-col p-4 cursor-pointer hover:border-emerald-400 transition-all text-left z-50 overflow-hidden relative group shadow-2xl`}
         onClick={() => {
           toast.dismiss(t.id);
           navigate('/bright-connection');
         }}
       >
-        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/40 mt-0.5">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-extrabold text-sm text-white">Storefront Verified & Attached!</p>
-          <p className="text-xs text-slate-300 mt-1 leading-snug">
-            Field Agent (Rajesh Menon) verified arrival & OCR at <strong className="text-emerald-400">{storeContext.name}</strong> ({storeContext.area}, {storeContext.city})
-          </p>
-          <p className="text-[11px] text-emerald-400 font-extrabold mt-2 hover:underline flex items-center gap-1">
-            Saved to Bell Icon • Click to open page details →
-          </p>
+        <div className="absolute -top-12 -right-12 w-28 h-28 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/30 transition-all" />
+
+        <div className="flex items-start gap-3.5 relative z-10">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/30 to-emerald-700/20 flex items-center justify-center flex-shrink-0 border border-emerald-500/50 shadow-inner mt-0.5">
+            <CheckCircle2 className="h-6 w-6 text-emerald-400 animate-pulse" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                SETU AI Verified
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">Just Now</span>
+            </div>
+            <p className="font-extrabold text-sm text-white mt-1.5 tracking-tight flex items-center gap-1.5">
+              Storefront OCR Verified: {storeContext.name}
+            </p>
+            <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+              Field Agent <strong className="text-emerald-300 font-semibold">Rajesh Menon</strong> verified arrival & OCR at <span className="text-white font-medium">{storeContext.name}</span> ({storeContext.area}, {storeContext.city}).
+            </p>
+            <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between">
+              <span className="text-[11px] text-emerald-400 font-bold hover:underline flex items-center gap-1">
+                Saved to Bell Icon • Click to open details →
+              </span>
+              <span className="text-[10px] text-slate-500">Tap to dismiss</span>
+            </div>
+          </div>
         </div>
       </div>
-    ), { duration: 6000, position: 'top-right' });
+    ), { duration: 6500, position: 'top-right' });
   };
 
   // ================= STEP 4: ARTHA STORE ACCOUNT STATEMENT DATA (EXACT MUMBAI LEDGER) =================
