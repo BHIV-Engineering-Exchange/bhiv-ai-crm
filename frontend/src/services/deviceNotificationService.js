@@ -1,6 +1,9 @@
 import React from 'react';
 import toast from 'react-hot-toast';
 
+// Branded high-resolution SETU AI icon for native device notifications
+const SETU_DEFAULT_ICON = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="%230f172a"/><rect x="4" y="4" width="120" height="120" rx="24" fill="none" stroke="%2310b981" stroke-width="4"/><path d="M38 78 L58 48 L70 66 L90 38" fill="none" stroke="%2310b981" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="38" r="8" fill="%2334d399"/></svg>`;
+
 class DeviceNotificationService {
   constructor() {
     this.isSupported = typeof window !== 'undefined' && 'Notification' in window;
@@ -42,9 +45,6 @@ class DeviceNotificationService {
       return false;
     }
   }
-
-// Branded high-resolution SETU AI icon for native device notifications
-const SETU_DEFAULT_ICON = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="28" fill="%230f172a"/><rect x="4" y="4" width="120" height="120" rx="24" fill="none" stroke="%2310b981" stroke-width="4"/><path d="M38 78 L58 48 L70 66 L90 38" fill="none" stroke="%2310b981" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle cx="90" cy="38" r="8" fill="%2334d399"/></svg>`;
 
   /**
    * Dispatch a device notification to the hardware/browser
