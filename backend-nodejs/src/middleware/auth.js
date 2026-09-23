@@ -34,6 +34,7 @@ export const protect = async (req, res, next) => {
           name: 'System Administrator',
           email: 'admin@company.com',
           role: 'admin',
+          tenant_id: 'tenant_sampada_001',
           isActive: true,
           toPublicJSON: function() {
             return {
@@ -41,6 +42,7 @@ export const protect = async (req, res, next) => {
               name: this.name,
               email: this.email,
               role: this.role,
+              tenant_id: this.tenant_id,
               isActive: this.isActive
             };
           }

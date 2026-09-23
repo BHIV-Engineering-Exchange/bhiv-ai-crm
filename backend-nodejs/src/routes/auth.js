@@ -73,6 +73,7 @@ router.post('/login', [
         name: email.includes('admin') ? 'System Administrator' : email.includes('manager') ? 'Operations Manager' : 'Customer Account',
         email,
         role,
+        tenant_id: 'tenant_sampada_001',
         isActive: true,
         toPublicJSON: function() {
           return {
@@ -80,6 +81,7 @@ router.post('/login', [
             name: this.name,
             email: this.email,
             role: this.role,
+            tenant_id: this.tenant_id,
             isActive: this.isActive
           };
         }
@@ -147,8 +149,9 @@ router.post('/login', [
         name: email?.includes('admin') ? 'System Administrator' : 'Operations Manager',
         email: email || 'admin@company.com',
         role,
+        tenant_id: 'tenant_sampada_001',
         isActive: true,
-        toPublicJSON: function() { return { _id: this._id, name: this.name, email: this.email, role: this.role, isActive: this.isActive }; }
+        toPublicJSON: function() { return { _id: this._id, name: this.name, email: this.email, role: this.role, tenant_id: this.tenant_id, isActive: this.isActive }; }
       };
       const token = generateToken(fallbackUser._id);
       return res.json({
