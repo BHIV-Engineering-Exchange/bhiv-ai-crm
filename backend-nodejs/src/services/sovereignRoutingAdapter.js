@@ -52,23 +52,67 @@ export class SovereignRoutingAdapter {
     return { ok: true, governance: { gated_bridge: gated } };
   }
 
-  static buildSarathiPayload(execution = {}) {
+  static toSarathiPayload(execution = {}) {
     this.assertRequiredFields(execution);
+    return this.buildSarathiPayload(execution);
+  }
+
+  static toBhivEnvelope(execution = {}) {
+    this.assertRequiredFields(execution);
+    const sarathiPayload = this.buildSarathiPayload(execution);
     return {
-      sarathi_version: '1.0',
-      execution_id: execution.execution_id,
-      trace_id: execution.trace_id,
-      tenant_id: execution.tenant_id,
-      intent_type: execution.intent_type,
-      source_system: execution.source_system,
-      target_system: execution.target_system,
-      parameters: execution.parameters,
-      priority: execution.priority,
-      timestamp: execution.timestamp,
-      schema_version: execution.schema_version,
-      actor: execution.actor,
+      envelope_version: '1.0',
+      execution: {
+        execution_id: execution.execution_id,
+        trace_id: execution.trace_id,
+        tenant_id: execution.tenant_id,
+        intent_type: execution.intent_type,
+        source_system: execution.source_system,
+        target_system: execution.target_system,
+        parameters: execution.parameters,
+        priority: execution.priority,
+        timestamp: execution.timestamp,
+        schema_version: execution.schema_version,
+        actor: execution.actor,
+      },
+      routing: sarathiPayload,
+      governance: execution.governance,
+      provenance: execution.provenance,
+      replay: execution.replay,
+    };
+  }
+
+  static buildRoutingPacket(execution = {}) {
+    try {
+      this.assertRequiredFields(execution);
+    } catch (error) {
+      return {
+        ok: false,
+        reason: 'execution_contract_invalid',
+        details: error.message,
+      };
+    }
+
+    const gated = this.validateGatedBridge(execution);
+    if (!gated.ok) {
+      return {
+        ok: false,
+        reason: gated.reason,
+        details: gated.missing_fields || gated.status,
+      };
+    }
+
+    const sarathiPayload = this.buildSarathiPayload(execution);
+    const bhivEnvelope = this.toBhivEnvelope(execution);
+
+    return {
+      ok: true,
+      sarathi_payload: sarathiPayload,
+      bhiv_envelope: bhivEnvelope,
+      governance: gated.governance,
     };
   }
 }
 
 export default SovereignRoutingAdapter;
+
