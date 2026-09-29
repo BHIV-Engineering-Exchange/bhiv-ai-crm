@@ -476,9 +476,6 @@ export const BrightConnectionDemo = () => {
               <Building2 className="h-6 w-6 text-purple-400" />
               Bright Connections — Tally Receivables Workflow
             </h1>
-            <p className="text-xs text-slate-300 mt-1">
-              Company: <span className="text-white font-mono">{pdfMeta.company}</span> | Outstanding: <span className="text-emerald-300 font-bold">{formatCurrency(pdfMeta.totalReceivables)}</span> across <span className="text-purple-300 font-bold">{pdfMeta.totalParties} Mumbai Dealers</span>
-            </p>
           </div>
         </div>
       </div>
